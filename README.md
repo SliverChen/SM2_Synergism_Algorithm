@@ -1,0 +1,1 @@
+# SM2_Synergism_Algorithm
