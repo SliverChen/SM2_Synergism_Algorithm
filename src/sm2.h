@@ -43,23 +43,31 @@ extern "C"{
 //WSA版本
 static WSADATA wsaData;
 
-/*
-    SM2客户端实例
+class SM2Socket
+{
+    public:
+        void Init() = 0;
+        int send(unsigned char*) = 0;
+        int recv(unsigned char*) = 0;
+    protected:
+        int privateKey;
+        SOCKET mSocket;
+};
 
-    ip:         服务端ip地址
-    port:       服务端开放接口
-    mSocket:    客户端套接字
-    serverAddr: 服务端地址实例
-    privateKey: 私钥
-*/
-typedef struct SM2_Socket{
-    SOCKET* mSocket;          //the client socket
-    sockaddr_in* serverAddr;  //the server socket information
+class SM2Client : public SM2Socket
+{
+    public:
+        void Init();
+        int send(unsigned char*);
+        int recv(unsigned char*);
+        int connect(const string&ip,int port);
+        int disconnect();
+        bool isOpen();
+        int CalData();
+        void create_private_key();
+        void create_public_key();
+};
 
-    private:
-        int privateKey;       //the number rand in [1,n-1]
-
-}SM2Client;
 
 
 //initialize the socket environment

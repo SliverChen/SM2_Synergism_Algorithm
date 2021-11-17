@@ -41,6 +41,14 @@ void ecc_native2bytes(uint8_t p_native[NUM_ECC_DIGITS],uint8_t p_bytes[NUM_ECC_D
 */
 static int EccPoint_isZero(EccPoint* p_point);
 
+
+/*
+    check if point is on curve
+    @return 1 if point is on curve, 0 otherwise
+*/
+static int EccPoint_is_on_curve(const EccPoint& p_point);
+
+
 /*
     Double in place
     @param X1 the X-axis component

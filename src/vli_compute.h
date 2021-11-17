@@ -55,6 +55,13 @@ static uint8_t vli_testBit(uint8_t *p_vli,unsigned int p_bit);
 */
 static unsigned int vli_numDigits(uint8_t* p_vli);
 
+
+/*
+    counts the number of bits required for p_vli
+*/
+static unsigned int vli_numBits(uint8_t* p_vli);
+
+
 /*
     set value from other value
     @param p_src the integer that will be refered
@@ -77,7 +84,7 @@ static int vli_cmp(uint8_t* p_left,uint8_t* p_right);
     @param p_src the value that will be computed
     @param p_shift the number of bits shifted left
 */
-static void vli_lshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_shift);
+static uint8_t vli_lshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_shift);
 
 /*
     computes value >> c
@@ -91,13 +98,13 @@ static void vli_rshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_right);
 /*
     computes adding
 */
-static void vli_add(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+static uint8_t vli_add(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
 
 
 /*
     computes minus
 */
-static void vli_sub(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+static uint8_t vli_sub(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
 
 
 /*
