@@ -1,3 +1,7 @@
+/*
+    the header of the point in ECC
+*/
+
 #ifndef HEADER_ECC_POINT_H
 #define HEADER_ECC_POINT_H
 #pragma once;

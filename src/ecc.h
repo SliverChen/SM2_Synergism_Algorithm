@@ -1,33 +1,19 @@
+/*
+    the header of ECC curve
+*/
+
 #ifndef HEADER_ECC_H
 #define HEADER_ECC_H
 #pragma once
 
 #include"common.h"
+#include"vli_compute.h"
 #include"ecc_point.h"
 #include"ecc_param.h"
 
 #ifndef _cplusplus
 extern "C"{
 #endif 
-
-/*
-    Create a public / private key pair
-    @param p_publicKey  the generated public key
-    @param p_privateKey  the generated private key
-    @param p_random  the random number to use to generate the key pair
-    @returns 1 if the given point is valid, 0 if it is invalid
-*/
-int ecc_make_key(EccPoint *p_publicKey,uint8_t p_privateKey[NUM_ECC_DIGITS],uint8_t p_random[NUM_ECC_DIGITS]);
-
-
-/*
-    check the given point if is on the chosen elliptic curve
-    @param p_publicKey the point to check
-    @returns 1 if the given point is valid, 0 if it is invalid
-*/
-int ecc_valid_public_key(EccPoint* p_publicKey);
-
-//------这里有个疑问，什么是共享私钥？
 
 
 /*
@@ -46,155 +32,91 @@ void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4],uint8_t P_native[NUM_E
 void ecc_native2bytes(uint8_t p_native[NUM_ECC_DIGITS],uint8_t p_bytes[NUM_ECC_DIGITS*4]);
 
 
-/* the function of 8-bit values */
+/* ecc point operations */
 
 /*
-    clear the value
-    @param p_vli the value that will be cleared
+    check if point is infinity point or not
+    @param p_point the point that will be checked
+    @return 1 if p_point is at infinity,0 otherwise
 */
-static void vli_clear(uint8_t* p_vli);
-
+static int EccPoint_isZero(EccPoint* p_point);
 
 /*
-    check the value if is zero
-    @param p_vli the value that will be checked
-    @return 1 if the value is zero, 0 otherwise.
+    Double in place
+    @param X1 the X-axis component
+    @param Y1 the Y-axis component
+    @param Z1 the Z-axis component
 */
-static int vli_isZero(uint8_t* p_vli);
-
-
-/*
-    check the value if is valid
-    @param p_vli the value that will be checked
-    @return nonzero if bit p_bit of p_vli is set.
-*/
-static uint8_t vli_testBit(uint8_t *p_vli,unsigned int p_bit);
+static void EccPoint_double_jacobian(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
 
 
 /*
-    counts the number of 8-bit digits in p_vli
-    @param p_vli the value that will be counted
-    @return the number of 8-bit digits in p_vli
+    Modify (x1,y1) => (x1 * z^2, y1 * z^3)
 */
-static unsigned int vli_numDigits(uint8_t* p_vli);
-
-/*
-    set value from other value
-    @param p_src the integer that will be refered
-    @param p_dst the integer that will be set
-*/
-static void vli_set(uint8_t* p_src,uint8_t* p_dst)
+static void apply_z(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
 
 
 /*
-    compare both of values
-    @param p_left one value
-    @param p_right the other value
-    @return 1 if p_left>p_right, 0 if p_left==p_right, -1 if p_left < p_right
+    Given P(x1,y1), calculate 2P=>(x2,y2)
+    @param (X1,Y1) the point refers to P
+    @param (X2,Y2) the point after calculating
 */
-static int vli_cmp(uint8_t* p_left,uint8_t* p_right);
-
-/*
-    computes value << c
-    @param p_result the value after computing
-    @param p_src the value that will be computed
-    @param p_shift the number of bits shifted left
-*/
-static void vli_lshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_shift);
-
-/*
-    computes value >> c
-    @param p_result the value after computing
-    @param p_src the value that will be computed
-    @param p_shift the number of bits shifted right
-*/
-static void vli_rshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_right);
+static void XYcZ_initial_double(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
 
 
 /*
-    computes adding
+    calculate point1(x1,y1) add point2(x2,y2)
+    the result is in the point2
 */
-static void vli_add(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+static void XYcZ_add(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
 
 
 /*
-    computes minus
+    compute point add and point minus \n
+    OutPut: \n
+        P+Q = (x3,y3,z); P-Q = (x3',y3',z) \n
+    which: \n
+        X1 = x3,Y1 = y3; X2 = x3', Y2 = y3'
+    @param (X1,Y1) one of the point to be calculated
+    @param (X2,Y2) one of the point to be calculated
+    @return X1 the x-axis value after adding
+    @return Y1 the y-axis value after adding
+    @return X2 the x-axis value after minusing
+    @return Y2 the y-axis value after minusing
 */
-static void vli_sub(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+static void XYcZ_addC(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
 
 
 /*
-    computes multiply
+    compute mutiply between two of the EccPoint
 */
-static void vli_mult(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
-
-
-
-/* the function that computed in mod */
-
-/*
-    multiply in mod
-    @param p_result the value after computing
-    @param p_left the left value to be multiplied
-    @param p_right the other value to be multiplied
-    @param p_mod the mod of the defined ecc
-*/
-static void vli_modMult(
-    uint8_t *p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
-
-/*
-    multiply in mod with faster way
-*/
-static void vli_modMult_fast(
-    uint8_t* p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod
-);
-
-#if ECC_SQUARE_FUNC
-
-/*
-    computing the value in square
-    s.t. value * value
-    @param p_result the result of computing
-    @param p_src the value participated in computing
-*/
-static void vli_square(uint8_t* p_result,uint8_t* p_src);
-
-/*
-    computing the value in square with faster way
-*/
-static void vli_modSquare_fast(uint8_t* p_result,uint8_t* p_src);
-
-#else //ECC_SQUARE_FUNC
-
-#define vli_square(result,left,size) vli_mult
-
-#endif //ECC_SQUARE_FUNC
-
-/*
-    add in mod
-    @param p_result the value after computing
-    @param p_left the left value to be added
-    @param p_right the other value to be added
-    @param p_mod the mod of the defined ecc
-*/
-static void vli_modAdd(
-    uint8_t* p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
+static void EccPoint_mult(EccPoint* p_result,EccPoint* p_point,
+    uint8_t* p_scalar,uint8_t* p_initialZ);
 
 
 /*
-    minus in mod
-    @param p_result the value after computing
-    @param p_left the left value to be minus
-    @param p_right the right value to be minus
-    @param p_mod the mod of the defined ecc
+    Create a public / private key pair
+    @param p_publicKey  the generated public key
+    @param p_privateKey  the generated private key
+    @param p_random  the random number to use to generate the key pair
+    @returns 1 if the given point is valid, 0 if it is invalid
 */
-static void vli_modSub(
-    uint8_t* p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
+int ecc_make_key(EccPoint *p_publicKey,uint8_t p_privateKey[NUM_ECC_DIGITS],uint8_t p_random[NUM_ECC_DIGITS]);
 
 
 /*
-
+    check the given point if is on the chosen elliptic curve
+    @param p_publicKey the point to check
+    @returns 1 if the given point is valid, 0 if it is invalid
 */
+int ecc_valid_public_key(EccPoint* p_publicKey);
+
+
+/*
+    calculate the shared secret
+*/
+int ecdh_shared_secret(uint8_t p_secret[NUM_ECC_DIGITS],EccPoint* p_publicKey,
+    uint8_t p_privateKey[NUM_ECC_DIGITS],uint8_t p_random[NUM_ECC_DIGITS]);
 
 
 

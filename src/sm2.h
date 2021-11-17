@@ -1,11 +1,12 @@
 /*
-
+    the header of SM2 algorithms
 */
 
 #ifndef HEADER_SM2_H
 #define HEADER_SM2_H
 
 #include"common.h"
+#include"ecc.h"
 #include<WinSock2.h>
 #pragma comment(lib,"ws2_32.lib");
 
@@ -57,15 +58,16 @@ typedef struct SM2_Socket{
 
 }SM2Client;
 
+/*
+    SM2 encrypt(normally can imitate the SM2 algorithm)
+*/
+int Encrypt_SM2(unsigned char* Message_original,int length,unsigned char* Message_Encrypted);
+
 
 /*
-    make the integer into the representation of hex
-    @param source the converted the integer
-    @param result the representation of hex after converting
-    @param len the length of the source integer
+    SM2 Synergism decrypt
 */
-void tohex(const uint8_t* source,uint8_t* result,int len);
-
+int Decrypt_SM2(unsigned char* Message_Encrypted,int length,unsigned char* Message_Decrypted);
 
 
 
