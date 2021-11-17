@@ -40,6 +40,9 @@ extern "C"{
 #endif //ECC_ASM
 
 
+//WSA版本
+static WSADATA wsaData;
+
 /*
     SM2客户端实例
 
@@ -50,13 +53,46 @@ extern "C"{
     privateKey: 私钥
 */
 typedef struct SM2_Socket{
+    SOCKET* mSocket;          //the client socket
+    sockaddr_in* serverAddr;  //the server socket information
 
-    string ip;
-    int port;
-    SOCKET* mSocket;
-    sockaddr_in* serverAddr;
+    private:
+        int privateKey;       //the number rand in [1,n-1]
 
 }SM2Client;
+
+
+//initialize the socket environment
+int Init_Env();
+
+//free the socket environment
+int Free_Env();
+
+//initialize the client socket
+int Init_Client(SM2Client* mClient);
+
+//free the client socket
+int Free_Client(SM2Client* mClient);
+
+/*
+    make client connect with the server
+    @param mClient the struct of the client
+    @param ip_server the ip of server
+    @param port_server the port of server
+    @return 1 if connection is success, 0 otherwise
+*/
+int Connect_Server_Client(SM2Client* mClient,const string& ip_Server,int port_Server);
+
+
+/*
+    make client disconnect with the server
+    @param mClient the struct of the client
+*/
+int Disconnect_Server_Client(SM2Clientt* mClient);
+
+/*
+    Send message to Client
+*/
 
 /*
     SM2 encrypt(normally can imitate the SM2 algorithm)

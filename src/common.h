@@ -50,4 +50,9 @@ static SYSTEMTIME systemTime;
 //others
 typedef unsigned int unit;
 
+//函数是否成功调用的标识符
+#define SUCCESS 0
+#define BAD 1
+
+
 #endif //HEADER_COMMON_H
