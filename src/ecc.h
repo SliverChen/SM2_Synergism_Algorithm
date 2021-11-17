@@ -11,7 +11,7 @@
 #include"ecc_point.h"
 #include"ecc_param.h"
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 extern "C"{
 #endif 
 
@@ -120,8 +120,8 @@ int ecdh_shared_secret(uint8_t p_secret[NUM_ECC_DIGITS],EccPoint* p_publicKey,
 
 
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 }
-#endif
+#endif //__cplusplus
 
 #endif //HEADER_ECC_H

@@ -11,9 +11,9 @@
 #pragma comment(lib,"ws2_32.lib");
 
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 extern "C"{
-#endif //_cplusplus
+#endif //__cplusplus
 
 /*
     define to enable SM2 debug function
@@ -88,7 +88,7 @@ int Connect_Server_Client(SM2Client* mClient,const string& ip_Server,int port_Se
     make client disconnect with the server
     @param mClient the struct of the client
 */
-int Disconnect_Server_Client(SM2Clientt* mClient);
+int Disconnect_Server_Client(SM2Client* mClient);
 
 /*
     Send message to Client
@@ -107,8 +107,8 @@ int Decrypt_SM2(unsigned char* Message_Encrypted,int length,unsigned char* Messa
 
 
 
-#ifdef _cplusplus
+#ifdef __cplusplus
 }
-#endif //_cplusplus
+#endif //__cplusplus
 
 #endif //HEAEDER_SM2_H

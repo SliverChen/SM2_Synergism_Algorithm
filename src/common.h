@@ -40,11 +40,11 @@ static SYSTEMTIME systemTime;
 #define FREE(x) delete x;x=nullptr;
 #define FREEARRAY(x) delete[] x;x=nullptr;
 
-//通用公式计算(主要用于后续拓展到512bit的SM2)
+//通用公式计算(主要用于后续对SM2的拓展，目前用32位即可)
 #define CONCAT1(a,b) a##b
 #define CONCAT(a,b) CONCAT1(a,b)
 
-//256bit的SM2
+//SM2的数据长度
 #define NUM_ECC_DIGITS 32
 
 //others

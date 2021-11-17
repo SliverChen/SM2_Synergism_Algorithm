@@ -8,9 +8,9 @@
 
 #include"common.h"
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 extern "C" {
-#endif //_cplusplus
+#endif //__cplusplus
 
 
 typedef struct ECCPOINT{
@@ -27,8 +27,8 @@ typedef struct ECCSIG{
 
 
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 }
-#endif //_cplusplus
+#endif //__cplusplus
 
 #endif //HEADER_ECC_POINT_H

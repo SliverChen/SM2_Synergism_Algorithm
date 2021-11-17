@@ -10,9 +10,9 @@
 #include"common.h"
 #include"ecc_point.h"
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 extern "C"{
-#endif //_cplusplus
+#endif //__cplusplus
 
 /* the parameters of the Ecc */
 #define Curve_A_32 {0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF}
@@ -36,8 +36,8 @@ static EccPoint curve_G = CONCAT(Curve_G_,NUM_ECC_DIGITS);
 static uint8_t curve_n[NUM_ECC_DIGITS] = CONCAT(Curve_N_,NUM_ECC_DIGITS);
 
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 }
-#endif //_cplusplus
+#endif //__cplusplus
 
 #endif //HEADER_ECC_PARAM_H

@@ -11,9 +11,9 @@
 
 #include"common.h"
 
-#ifndef _cplusplus
-extern "C"{
-#endif //_cplusplus
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 
 #define EVEN(vli) (!(vli[0] & 1))
 
@@ -185,9 +185,9 @@ static void vli_modSquare_fast(uint8_t* p_result,uint8_t* p_left);
 
 
 
-#ifndef _cplusplus
+#ifdef __cplusplus
 }
-#endif //_cplusplus
+#endif //__cplusplus
 
 
 #endif //HEADER_VLI_COMPUTE_H
