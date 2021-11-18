@@ -12,6 +12,9 @@ Create in 2021 / 11 / 16
 
     随机数的生成参考: https://github.com/Tencent/secguide/blob/main/C%2CC%2B%2B%E5%AE%89%E5%85%A8%E6%8C%87%E5%8D%97.md#44--%E5%BF%85%E9%A1%BB%E5%9C%A8%E9%9C%80%E8%A6%81%E9%AB%98%E5%BC%BA%E5%BA%A6%E5%AE%89%E5%85%A8%E5%8A%A0%E5%AF%86%E6%97%B6%E4%B8%8D%E5%BA%94%E4%BD%BF%E7%94%A8%E5%BC%B1prng%E5%87%BD%E6%95%B0
 
+    具体参考(openssl):
+    https://www.openssl.org/docs/man1.1.1/man3/RAND_bytes.html
+
 - 协同签名的过程
 - 协同解密的过程
 

@@ -21,16 +21,17 @@
 #include<cstdlib>
 #include<iomanip>
 
-using std::string;
-using std::cout;
+using namespace std;
+#pragma comment(lib,"ws2_32.lib")
+
 
 static SYSTEMTIME systemTime;
-#define MES_INFO GetLocalTime(&systemTime); \
+#define MES_INFO GetLocalTime(&systemTime);\
     cout<<"["<< \
     systemTime.wHour<<":"<<systemTime.wMinute<<":"<<systemTime.wSecond \
     <<" Info]:"
 
-#define MES_ERROR GetLocalTime(&systemTime); \
+#define MES_ERROR GetLocalTime(&systemTime);\
     cout<<"["<< \
     systemTime.wHour<<":"<<systemTime.wMinute<<":"systemTime.wSecond \
     <<" Error]:"

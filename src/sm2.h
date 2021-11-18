@@ -7,8 +7,8 @@
 
 #include"common.h"
 #include"ecc.h"
+#include"sm3.h"
 #include<WinSock2.h>
-#pragma comment(lib,"ws2_32.lib");
 
 
 /*
@@ -45,24 +45,75 @@ class SM2Socket
         virtual void Init() = 0;
         virtual int send(unsigned char*) = 0;
         virtual int recv(unsigned char*) = 0;
-    protected:
-        int privateKey;
-        SOCKET mSocket;
 };
 
 class SM2Client : public SM2Socket
 {
     public:
-        void Init();
-        int send(unsigned char*);
-        int recv(unsigned char*);
-        int connect(const string&ip,int port);
-        int disconnect();
-        bool isOpen();
-        EccPoint CalData_sign();
-        EccPoint CalData_decrypt();
+
+        //产生私钥
         void create_private_key();
+        
+        //产生公钥
         void create_public_key();
+        
+        //加密
+        int Encrypt_SM2(
+            unsigned char* Message_Encrypted,
+            int length,
+            unsigned char* Message_Decrypted
+            );
+
+        //解密
+        int Decrypt_SM2(
+            unsigned char* Message_Encrypted,
+            int length,
+            const string &ip,
+            int port,
+            unsigned char* Message_Decrypted
+            );
+
+    private:
+        void Init();
+        
+        int connect(const string&ip,int port);
+        
+        int disconnect();
+        
+        int send(unsigned char*);
+        
+        int recv(unsigned char*);
+        
+        bool isOpen();
+        
+        EccPoint CalData_sign();
+        
+        EccPoint CalData_decrypt(const string& ip,int port);
+        
+        int sm2_encrypt(
+            uint8_t* cipher_text,
+            unsigned int *cpiher_len,
+            EccPoint* p_publicKey,
+            uint8_t p_random[NUM_ECC_DIGITS],
+            uint8_t* plain_text,
+            unsigned int plain_len
+            );
+
+        int sm2_decrypt(
+            uint8_t* plain_text,
+            unsigned int* plain_len,
+            uint8_t* cipher_text,
+            unsigned int cipher_len,
+            uint8_t p_privateKey[NUM_ECC_DIGITS],
+            const string& ip,
+            int port
+        );
+
+    private:
+        uint8_t* m_priKey;
+        uint8_t* m_pubKey_R;
+        uint8_t* m_pubKey_S;
+        SOCKET mSocket;
 };
 
 
