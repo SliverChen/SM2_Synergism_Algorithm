@@ -11,10 +11,6 @@
 #pragma comment(lib,"ws2_32.lib");
 
 
-#ifdef __cplusplus
-extern "C"{
-#endif //__cplusplus
-
 /*
     define to enable SM2 debug function
 */
@@ -46,9 +42,9 @@ static WSADATA wsaData;
 class SM2Socket
 {
     public:
-        void Init() = 0;
-        int send(unsigned char*) = 0;
-        int recv(unsigned char*) = 0;
+        virtual void Init() = 0;
+        virtual int send(unsigned char*) = 0;
+        virtual int recv(unsigned char*) = 0;
     protected:
         int privateKey;
         SOCKET mSocket;
@@ -63,7 +59,8 @@ class SM2Client : public SM2Socket
         int connect(const string&ip,int port);
         int disconnect();
         bool isOpen();
-        int CalData();
+        EccPoint CalData_sign();
+        EccPoint CalData_decrypt();
         void create_private_key();
         void create_public_key();
 };
@@ -113,10 +110,5 @@ int Encrypt_SM2(unsigned char* Message_original,int length,unsigned char* Messag
 */
 int Decrypt_SM2(unsigned char* Message_Encrypted,int length,unsigned char* Message_Decrypted);
 
-
-
-#ifdef __cplusplus
-}
-#endif //__cplusplus
 
 #endif //HEAEDER_SM2_H

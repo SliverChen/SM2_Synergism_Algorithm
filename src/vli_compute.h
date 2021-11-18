@@ -18,10 +18,10 @@ extern "C" {
 #define EVEN(vli) (!(vli[0] & 1))
 
 /*
-    make the integer into the representation of hex
-    @param source the converted the integer
+    make the string into the representation of hex
+    @param source the converted string
     @param result the representation of hex after converting
-    @param len the length of the source integer
+    @param len the length of the source string
 */
 void tohex(const uint8_t* source,uint8_t* result,int len);
 
