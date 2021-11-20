@@ -1,10 +1,12 @@
-#ifdef __cplusplus  //在C++编译环境下
-extern "C" 
-{
-#endif
+
 
 #ifndef _MICRO_SM2_H_
 #define _MICRO_SM2_H_
+
+#ifdef __cplusplus  //在C++编译环境下
+extern "C"
+{
+#endif
 
 #include <stdint.h>
 
@@ -131,8 +133,8 @@ typedef struct EccSig
 	Returns 1 if the signature generated successfully, 0 if an error occurred. If 0 is returned,
 	try again with a different random number.
 	*/
-	//int ecdsa_sign(uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS], uint8_t p_privateKey[NUM_ECC_DIGITS],
-	//    uint8_t p_random[NUM_ECC_DIGITS], uint8_t p_hash[NUM_ECC_DIGITS]);
+	int ecdsa_sign(uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS], uint8_t p_privateKey[NUM_ECC_DIGITS],
+	   uint8_t p_random[NUM_ECC_DIGITS], uint8_t p_hash[NUM_ECC_DIGITS]);
 
 	/* ecdsa_verify() function.
 	Verify an ECDSA signature.
@@ -174,8 +176,10 @@ typedef struct EccSig
 	void ecc_native2bytes(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t p_native[NUM_ECC_DIGITS]);
 	__declspec(dllexport) int Encrpt_SM2(unsigned char*Message_original, int Length_of_Message, unsigned char* Message_encrypted);//定义的加密函数接口
 	__declspec(dllexport) int Decrypt_SM2(unsigned char *Message_Encrypted, int Length_of_Message, unsigned char* Message_Decrypted);//定义的解密函数接口
-#endif /* _MICRO_SM2_H_ */
 
 #ifdef __cplusplus  //在C++编译环境下
 }
 #endif
+
+
+#endif /* _MICRO_SM2_H_ */

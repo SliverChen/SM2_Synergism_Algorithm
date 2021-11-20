@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include<ctype.h>
 
 typedef unsigned int uint;
 
@@ -998,51 +999,51 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
 
 //static unsigned int max(unsigned int a, unsigned int b)
 //{
-//    return (a > b ? a : b);
+//   return (a > b ? a : b);
 //}
 
 //************ DSA Sign with SM2 ************//
-//int ecdsa_sign(uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS], uint8_t p_privateKey[NUM_ECC_DIGITS],
-//    uint8_t p_random[NUM_ECC_DIGITS], uint8_t p_hash[NUM_ECC_DIGITS])
-//{
-//    uint8_t k[NUM_ECC_DIGITS];
-//    EccPoint p;
-//    
-//    if(vli_isZero(p_random))
-//    { /* The random number must not be 0. */
-//        return 0;
-//    }
-//    
-//    vli_set(k, p_random);
-//    if(vli_cmp(curve_n, k) != 1)
-//    {
-//        vli_sub(k, k, curve_n);
-//    }
-//    
-//    /* tmp = k * G */
-//    EccPoint_mult(&p, &curve_G, k, NULL);
-//    
-//    /* r = x1 + e (mod n) */
-//    vli_set(r, p.x);
-//    vli_modAdd(r, r, p_hash, curve_n);
-//    if(vli_cmp(curve_n, r) != 1)
-//    {
-//        vli_sub(r, r, curve_n);
-//    }
-//    if(vli_isZero(r))
-//    { /* If r == 0, fail (need a different random number). */
-//        return 0;
-//    }
-//    
-//    vli_modMult(s, r, p_privateKey, curve_n); /* s = r*d */
-//    vli_modSub(s, k, s, curve_n); /* k-r*d */
-//    uint8_t one[NUM_ECC_DIGITS] = {1};
-//    vli_modAdd(p_privateKey, p_privateKey, one, curve_n); /* 1+d */
-//    vli_modInv(p_privateKey, p_privateKey, curve_n); /* (1+d)' */
-//    vli_modMult(s, p_privateKey, s, curve_n); /* (1+d)'*(k-r*d) */
-//    
-//    return 1;
-//}
+int ecdsa_sign(uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS], uint8_t p_privateKey[NUM_ECC_DIGITS],
+   uint8_t p_random[NUM_ECC_DIGITS], uint8_t p_hash[NUM_ECC_DIGITS])
+{
+   uint8_t k[NUM_ECC_DIGITS];
+   EccPoint p;
+   
+   if(vli_isZero(p_random))
+   { /* The random number must not be 0. */
+       return 0;
+   }
+   
+   vli_set(k, p_random);
+   if(vli_cmp(curve_n, k) != 1)
+   {
+       vli_sub(k, k, curve_n);
+   }
+   
+   /* tmp = k * G */
+   EccPoint_mult(&p, &curve_G, k, NULL);
+   
+   /* r = x1 + e (mod n) */
+   vli_set(r, p.x);
+   vli_modAdd(r, r, p_hash, curve_n);
+   if(vli_cmp(curve_n, r) != 1)
+   {
+       vli_sub(r, r, curve_n);
+   }
+   if(vli_isZero(r))
+   { /* If r == 0, fail (need a different random number). */
+       return 0;
+   }
+   
+   vli_modMult(s, r, p_privateKey, curve_n); /* s = r*d */
+   vli_modSub(s, k, s, curve_n); /* k-r*d */
+   uint8_t one[NUM_ECC_DIGITS] = {1};
+   vli_modAdd(p_privateKey, p_privateKey, one, curve_n); /* 1+d */
+   vli_modInv(p_privateKey, p_privateKey, curve_n); /* (1+d)' */
+   vli_modMult(s, p_privateKey, s, curve_n); /* (1+d)'*(k-r*d) */
+   
+   return 1;
+}
 
 /************ DSA Verify with SM2 ************/
 int ecdsa_verify(EccPoint *p_publicKey, uint8_t p_hash[NUM_ECC_DIGITS], uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS])
@@ -1569,58 +1570,4 @@ void ecc_native2bytes(uint8_t p_bytes[NUM_ECC_DIGITS*4], uint8_t p_native[NUM_EC
     {
         p_bytes[NUM_ECC_DIGITS-i-1] = p_native[i];
     }
-}
-
-
-// ���ܷ��͸��豸������
-int Encrpt_SM2(unsigned char*Message_original, int Length_of_Message, unsigned char* Message_encrypted)
-{
-	EccPoint p_publicKey;
-	uint8_t p_privateKey[NUM_ECC_DIGITS];
-	uint8_t p_random[NUM_ECC_DIGITS];
-	unsigned int encdata_len;
-	// ��Կǰ32λ��ע��ͽ��ܵĲ���һ�Թ�Կ
-	uint8_t pukx_str[] = "9b69cf828ae307ab9fa3bcbddc5f04831f0fae6835890befff91401dde6394ca";
-	// ��Կ��32λ
-	uint8_t puky_str[] = "28afe71cd21f8ffc7b3a52adffe90f22a68f8bf810fb2925da168407f4535a15";
-	// �����
-	uint8_t rnd_str[] = "59276E27D506861A16680F3AD9C02DCCEF3CC1FA3CDBE4CE6D54B80DEAC1BC21";
-
-	tohex(pukx_str, p_publicKey.x, NUM_ECC_DIGITS);
-	tohex(puky_str, p_publicKey.y, NUM_ECC_DIGITS);
-
-	tohex(rnd_str, p_random, NUM_ECC_DIGITS);
-
-	int ret = sm2_encrypt(Message_encrypted, &encdata_len, &p_publicKey, p_random, Message_original, Length_of_Message);
-	// ȥ����λ04��
-	for (int i = 0;i < encdata_len;i++)
-	{
-		Message_encrypted[i] = Message_encrypted[i + 1];
-	}
-	return ret;
-}
-// added by junxue.zheng �����豸���͵�����
-int Decrypt_SM2(unsigned char *Message_Encrypted, int Length_of_Message, unsigned char* Message_Decrypted)
-{
-	unsigned char encData_hex[65535];
-	int i = Length_of_Message;
-	// ��λ��04
-	for (i;i >=0;i--) 
-	{
-		Message_Encrypted[i + 2] = Message_Encrypted[i];
-	}
-	Message_Encrypted[0] = '0';
-	Message_Encrypted[1] = '4';
-	tohex(Message_Encrypted, encData_hex, Length_of_Message+2);
-	Length_of_Message = Length_of_Message/2 + 1;
-
-	uint8_t p_privateKey[NUM_ECC_DIGITS];
-	unsigned int p_out_len = 0;
-
-	//����˽Կ
-	uint8_t pvk_str[] = "b66fd44a0597b25ce27b282d9079b637bc060e4cc265640342e6651a014e03ff";
-
-	tohex(pvk_str, p_privateKey, NUM_ECC_DIGITS);
-	int ret = sm2_decrypt(Message_Decrypted, &p_out_len, encData_hex, Length_of_Message, p_privateKey);
-	return ret;
 }

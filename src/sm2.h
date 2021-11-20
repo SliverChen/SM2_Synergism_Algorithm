@@ -51,11 +51,27 @@ class SM2Client : public SM2Socket
 {
     public:
 
+        //构造时初始化WSA环境和Socket变量
+        SM2Client();
+
+        ~SM2Client();
+
         //产生私钥
         void create_private_key();
         
         //产生公钥
         void create_public_key();
+
+        //获取公钥
+        uint8_t* getPublicKey();
+
+        //获取消息的消息摘要
+        int getE(
+            char* IDa,int IDLen,
+            unsigned char* xa,unsigned char* ya,
+            unsigned char* plaintext,unsigned int plainLen,
+            unsigned char* e
+            );
         
         //加密
         int Encrypt_SM2(
@@ -76,19 +92,30 @@ class SM2Client : public SM2Socket
     private:
         void Init();
         
-        int connect(const string&ip,int port);
+        int Connect(const string&ip,int port);
         
         int disconnect();
+
+        //ZA=H256(ENTLA || IDA || a || b || xG || yG || xA || yA)
+        int get_z(
+            unsigned char* IDa,int IDLen,
+            unsigned char* xa,unsigned char* ya,
+            unsigned char* Za
+        );
         
-        int send(unsigned char*);
+        //为了让发送函数更具通用性，将传递的数据以vector的形式传进去
+        //在函数内部同时实现对EccPoint数据类型的转换
+        int Send(vector<EccPoint>&);
         
-        int recv(unsigned char*);
+        //为了让接收函数更具通用性，将接收的数据以vector的形式存储返回
+        //在函数内部同时实现对接受数据的数据类型转换
+        vector<EccPoint> Recv();
         
-        bool isOpen();
+        bool isConnected();
         
         EccPoint CalData_sign();
         
-        EccPoint CalData_decrypt(const string& ip,int port);
+        EccPoint CalData_decrypt(const EccPoint& C1);
         
         int sm2_encrypt(
             uint8_t* cipher_text,
@@ -109,57 +136,20 @@ class SM2Client : public SM2Socket
             int port
         );
 
+        /*
+            @brief 生成[1,n-1]范围内的十六进制随机数
+            @param randStr 接收生成的无符号字符串类型随机数
+        */
+        void makeRandom(uint8_t*& randStr);
+
     private:
         uint8_t* m_priKey;
         uint8_t* m_pubKey_R;
         uint8_t* m_pubKey_S;
         SOCKET mSocket;
+        sockaddr server;
 };
 
-
-
-//initialize the socket environment
-int Init_Env();
-
-//free the socket environment
-int Free_Env();
-
-//initialize the client socket
-int Init_Client(SM2Client* mClient);
-
-//free the client socket
-int Free_Client(SM2Client* mClient);
-
-/*
-    make client connect with the server
-    @param mClient the struct of the client
-    @param ip_server the ip of server
-    @param port_server the port of server
-    @return 1 if connection is success, 0 otherwise
-*/
-int Connect_Server_Client(SM2Client* mClient,const string& ip_Server,int port_Server);
-
-
-/*
-    make client disconnect with the server
-    @param mClient the struct of the client
-*/
-int Disconnect_Server_Client(SM2Client* mClient);
-
-/*
-    Send message to Client
-*/
-
-/*
-    SM2 encrypt(normally can imitate the SM2 algorithm)
-*/
-int Encrypt_SM2(unsigned char* Message_original,int length,unsigned char* Message_Encrypted);
-
-
-/*
-    SM2 Synergism decrypt
-*/
-int Decrypt_SM2(unsigned char* Message_Encrypted,int length,unsigned char* Message_Decrypted);
 
 
 #endif //HEAEDER_SM2_H

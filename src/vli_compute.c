@@ -55,7 +55,7 @@ extern "C"
         return (i + 1);
     }
 
-    static unsigned int vli_numDigits(uint8_t *p_vli)
+    static unsigned int vli_numBits(uint8_t *p_vli)
     {
         unsigned int i;
         uint8_t l_digit;
@@ -189,6 +189,71 @@ extern "C"
         {
             vli_add(p_result, p_result, p_mod);
         }
+    }
+
+    static void vli_modMult(
+        uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
+    {
+        uint8_t l_product[2 * NUM_ECC_DIGITS];
+        uint8_t l_modMultiple[2 * NUM_ECC_DIGITS];
+        unsigned int l_digitShift, l_bitShift;
+        unsigned int l_productBits;
+        unsigned int l_modBits = vli_numBits(p_mod);
+
+        vli_mult(l_product, p_left, p_right);
+        l_productBits = vli_numBits(l_product + NUM_ECC_DIGITS);
+        if (l_productBits)
+        {
+            l_productBits += NUM_ECC_DIGITS * 8;
+        }
+        else
+        {
+            l_productBits = vli_numBits(l_product);
+        }
+
+        if (l_productBits < l_modBits)
+        { /* l_product < p_mod. */
+            vli_set(p_result, l_product);
+            return;
+        }
+
+        /* Shift p_mod by (l_leftBits - l_modBits). This multiplies p_mod by the largest
+       power of two possible while still resulting in a number less than p_left. */
+        vli_clear(l_modMultiple);
+        vli_clear(l_modMultiple + NUM_ECC_DIGITS);
+        l_digitShift = (l_productBits - l_modBits) / 8;
+        l_bitShift = (l_productBits - l_modBits) % 8;
+        if (l_bitShift)
+        {
+            l_modMultiple[l_digitShift + NUM_ECC_DIGITS] = vli_lshift(l_modMultiple + l_digitShift, p_mod, l_bitShift);
+        }
+        else
+        {
+            vli_set(l_modMultiple + l_digitShift, p_mod);
+        }
+
+        /* Subtract all multiples of p_mod to get the remainder. */
+        vli_clear(p_result);
+        p_result[0] = 1; /* Use p_result as a temp var to store 1 (for subtraction) */
+        while (l_productBits > NUM_ECC_DIGITS * 8 || vli_cmp(l_modMultiple, p_mod) >= 0)
+        {
+            int l_cmp = vli_cmp(l_modMultiple + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS);
+            if (l_cmp < 0 || (l_cmp == 0 && vli_cmp(l_modMultiple, l_product) <= 0))
+            {
+                if (vli_sub(l_product, l_product, l_modMultiple))
+                { /* borrow */
+                    vli_sub(l_product + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS, p_result);
+                }
+                vli_sub(l_product + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS, l_modMultiple + NUM_ECC_DIGITS);
+            }
+            uint8_t l_carry = (l_modMultiple[NUM_ECC_DIGITS] & 0x01) << 7;
+            vli_rshift1(l_modMultiple + NUM_ECC_DIGITS);
+            vli_rshift1(l_modMultiple);
+            l_modMultiple[NUM_ECC_DIGITS - 1] |= l_carry;
+
+            --l_productBits;
+        }
+        vli_set(p_result, l_product);
     }
 
     static void vli_modMult_fast(

@@ -3,8 +3,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**",
-                "E:\\Studies\\CPlusLib\\OpenSSL\\OpenSSL-Win64\\include"
+                "${workspaceFolder}/**"
             ],
             "defines": [
                 "_DEBUG",

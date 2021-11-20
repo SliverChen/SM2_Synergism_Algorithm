@@ -11,6 +11,9 @@
 //字符串标准库
 #include<cstring>
 
+//数组标准库
+#include<vector>
+
 //多线程相关
 #include<mutex>
 #include<thread>
@@ -52,8 +55,8 @@ static SYSTEMTIME systemTime;
 typedef unsigned int unit;
 
 //函数是否成功调用的标识符
-#define SUCCESS 0
-#define BAD 1
+#define SUCCESS 1
+#define BAD 0
 
 
 #endif //HEADER_COMMON_H
