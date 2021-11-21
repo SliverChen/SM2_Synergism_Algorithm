@@ -1,19 +1,10 @@
-#include "sm2.h"
-#include <./3rdParty/include/openssl/bn.h>
-
-#pragma comment(lib, "liapps.lib")
-#pragma comment(lib, "libcrypto.lib")
-#pragma comment(lib, "libssl.lib")
-#pragma comment(lib, "libssl_static.lib")
-#pragma comment(lib, "openssl.lib")
-
+#include "sm2Client.h"
 
 SM2Client::SM2Client()
 {
     //初始化wsa环境
-    WSADATA wsaData;
-    WORD sockVersion = MAKEWORD(2,2);
-    if(WSAStartup(sockVersion,&wsaData) != 0)
+    WORD sockVersion = MAKEWORD(2, 2);
+    if (WSAStartup(sockVersion, &wsaData) != 0)
     {
         MES_ERROR << "cannot start wsa, please check socket version\n";
         WSACleanup();
@@ -21,41 +12,84 @@ SM2Client::SM2Client()
     }
 
     //初始化socket变量
-    if((mSocket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP)) == INVALID_SOCKET)
+    if ((mSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
     {
         MES_ERROR << "cannot create the socket,please check your setting\n";
         exit(-1);
     }
+
+    //开辟内存存储私钥和公钥
+    m_priKey = new uint8_t[NUM_ECC_DIGITS];
+    m_pubKey_x = new uint8_t[NUM_ECC_DIGITS];
+    m_pubKey_y = new uint8_t[NUM_ECC_DIGITS];
 }
 
 SM2Client::~SM2Client()
 {
+    //断开连接
     disconnect();
-    WSACleanup();
-}
 
+    //释放WSA环境
+    WSACleanup();
+
+    //释放私钥和公钥内存
+    FREEARRAY(m_priKey);
+    FREEARRAY(m_pubKey_x);
+    FREEARRAY(m_pubKey_y);
+}
 
 void SM2Client::create_private_key()
 {
-    //私钥是什么形式？
-    //在我的认知里它是一个属于[1,n-1]的随机数
-    //但是随机数的表达形式是怎么样的呢？
+    //1、生成私钥字符串(64位字符串，由数字和小写字母组成)
+    uint8_t* priKey_Str = nullptr;
+    makeRandom(priKey_Str);
 
-    //生成私钥(64位字符串，由数字和小写字母组成)
-    makeRandom(m_priKey);
+    //2、将字符串转换为uint8_t[NUM_ECC_DIGITS]的形式
+    tohex(priKey_Str, m_priKey, NUM_ECC_DIGITS);
 }
 
 void SM2Client::create_public_key()
 {
-    //1、没有私钥时调用create_private_key() (需要一个验证随机数是否合法的函数)
+    //1、没有私钥时创建私钥(这种判断似乎没有效,因为在构造的时候分配了内存)
     if (m_priKey == nullptr)
         create_private_key();
-    //2、基点G在哪,G的阶？在ecc_param.h已给定
-    //3、发送P1 = d1*G
 
-    //4、接收P = d1*d2G-G
+    //2、基点G在哪,G的阶？在ecc_param.h已给定(curve_G curve_n)
 
-    //公钥为P
+    //3、P1 = d1*G
+    EccPoint P1;
+    uint8_t *p_pvk = new uint8_t[NUM_ECC_DIGITS];
+
+    //至今也搞不懂为什么要从后面开始取
+    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        p_pvk[i] = m_priKey[NUM_ECC_DIGITS - i - 1];
+    }
+
+    EccPoint_mult(&P1, &curve_G, p_pvk, NULL);
+
+    //4、发送P1到对端
+    vector<EccPoint> data;
+    data.push_back(P1);
+    Send(data);
+
+    //5、接收P = d1*d2G-G
+    data = recv();
+
+    //6、接收后倒回来
+    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        m_pubKey_x[i] = data[0].x[NUM_ECC_DIGITS - i - 1];
+        m_pubKey_y[i] = data[0].y[NUM_ECC_DIGITS - i - 1];
+    }
+}
+
+EccPoint SM2Client::getPublicKey()
+{
+    EccPoint point;
+    vli_set(m_pubKey_x, &point.x);
+    vli_set(m_pubKey_y, &point.y);
+    return point;
 }
 
 int SM2Client::getE(
@@ -95,39 +129,11 @@ int SM2Client::get_z(
     unsigned char *p = Z;
     unsigned int len = 0;
 
-    unsigned char a[] = { 0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFE,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0x00,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFF,
-                          0xFC
-    }
+    unsigned char a[] = {
+        0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC};
 
     unsigned char b[] = {
         0x28, 0xE9, 0xFA, 0x9E, 0x9D, 0x9F, 0x5E, 0x34,
@@ -201,18 +207,16 @@ int SM2Client::Encrypt_SM2(
     unsigned int encdata_len;
 
     uint8_t randomKey[NUM_ECC_DIGITS];
-    uint8_t privateKey[NUM_ECC_DIGITS];
     EccPoint publicKey;
+    vli_set(m_pubKey_x, publicKey.x);
+    vli_set(m_pubKey_y, publicKey.y);
 
     //生成随机数k
     //注意k的生成先获取一串unsigned char字符串，然后再通过tohex的形式转换为可以计算的类型
     unsigned char *randomStr = nullptr;
     makeRandom(randomStr);
 
-    //将所有参与计算的数据转换无符号字符串为32位的16进制数组
-    tohex(m_priKey, privateKey, NUM_ECC_DIGITS);
-    tohex(m_pubKey_R, publicKey.x, NUM_ECC_DIGITS);
-    tohex(m_pubKey_S, publicKey.y, NUM_ECC_DIGITS);
+    //将随机数转换为十六进制形式的unsigned char数组
     tohex(randomStr, randomKey, NUM_ECC_DIGITS);
 
     /* 正式加密 */
@@ -241,6 +245,7 @@ int SM2Client::sm2_encrypt(
     uint8_t tmp = 0x00;
     uint8_t k[NUM_ECC_DIGITS];
     EccPoint C1, Pb, point2, point2_revert;
+
     uint8_t x2y2[NUM_ECC_DIGITS * 2];
     uint8_t C2[65535] = {0};
     uint8_t C3[NUM_ECC_DIGITS];
@@ -331,7 +336,7 @@ int SM2Client::Decrypt_SM2(
     const string &ip, int port, unsigned char *Message_Decrypted)
 {
     //1、连接到服务端，同时检查连接的有效性
-    if(Connect(ip, port) != SUCCESS)
+    if (Connect(ip, port) != SUCCESS)
     {
         MES_ERROR << "can not finish the decryption.\n";
         return 0;
@@ -343,7 +348,7 @@ int SM2Client::Decrypt_SM2(
     tohex(Message_Encrypted, encData_hex, length + 2);
     tohex(m_priKey, p_privateKey, NUM_ECC_DIGITS);
 
-    //3、specific decrpting
+    //3、解密的具体过程
     unsigned int p_out_len = 0;
     int ret = sm2_decrypt(
         Message_Decrypted, &p_out_len, encData_hex, length, p_privateKey);
@@ -571,60 +576,18 @@ EccPoint SM2Client::CalData_decrypt(const EccPoint &C1)
     }
     //5.2 计算Q2-k1Q3
     EccPoint Q2_k1Q3;
-    
 
     //6、返回P=(x2,y2)
     return x2y2;
 }
 
-void SM2Client::makeRandom(uint8_t *&randStr)
-{
 
-    uint8_t *curveN = nullptr;
-    tohex(curve_n, curveN, 2 * NUM_ECC_DIGITS);
-
-    BIGNUM *cn = BN_hex2bn(curveN);
-
-    BIGNUM *bn;
-    bn = BN_new(); //需要先申请空间，不然会出错
-
-    //比特长度
-    int bits = 8 * NUM_ECC_DIGITS;
-
-    //BN_rand_range: 生成[0,range)的随机数
-    //参考: https://www.openssl.org/docs/man3.0/man3/BN_rand_range.html
-
-    //随机数需要的区间为[1,n-1],显然该函数会生成0
-    //因此需要检验生成数是否为0，如果是则需要重新生成
-    do
-    {
-        BN_rand_range(bn, cn);
-    } while (BN_is_zero(bn));
-
-    //将BIGNUM转换为16进制的char*字符串
-    char *str = BN_bn2hex(bn);
-
-    //将char* 转换为unsigned char*
-    //(只能使用强制类型转换,无法使用static_cast，因为这两个是不同的类型)
-    //只有char 和 unsigned char能进行static_cast的转换
-    randStr = reinterpret_cast<unsigned char *>(str);
-
-#ifdef __SM2_DEBUG__
-    MES_INFO << " the random is defined as: " << randStr << endl;
-#endif //__SM2_DEBUG__
-
-    //释放BIGNUM内存
-    BN_free(bn);
-    BN_free(cn);
-}
-
-
-int SM2Client::Connect(const string& ip,int port)
+int SM2Client::Connect(const string &ip, int port)
 {
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = inet_addr(ip.c_str());
     server.sin_port = htons(port);
-    if(connect(mSocket,(SOCKADDR*)&server,sizeof(server)) == SOCKET_ERROR)
+    if (connect(mSocket, (SOCKADDR *)&server, sizeof(server)) == SOCKET_ERROR)
     {
         MES_ERROR << "cannot connect to the server,please check the ip and port correctly\n";
         return 0;
@@ -633,11 +596,11 @@ int SM2Client::Connect(const string& ip,int port)
     return 1;
 }
 
-int SM2Client::send(vector<EccPoint>& points)
+int SM2Client::send(vector<EccPoint> &points)
 {
     MES_INFO << "sending data to the server..\n";
     //数据预处理(从EccPoint类型转换为char*类型)
-    //同时设计一个首部记录对数据的定义描述以及数据的长度
+    //同时设计一个首部记录数据的长度
     //中途会涉及到字符串拼接的操作
     //ASCII编码从0-255，因此可以用16进制来表示
     //在传输数据的时候，将数据的16进制格式传过去更安全
@@ -645,33 +608,27 @@ int SM2Client::send(vector<EccPoint>& points)
     int size = points->size();
 
     string buffer = to_string(size);
-
-    uint8_t* tx = nullptr, * ty = nullptr;
-    char* valx = nullptr, * valy = nullptr;
-
-    for(auto point:points)
+    string point_str;
+    for (auto point : points)
     {
-        //将uint8_t数组转换为指针
-        tx = point.x;
-        ty = point.y;
+        //这里将32个用两位表示的十六进制来作为数据传输)
+        //总的来说，单个坐标的长度是64个字节
+        tostr(point.x, point_str, NUM_ECC_DIGITS);
+        buffer.append(point_str);
 
-        //将uint8_t指针强制转换为char指针
-        valx = reinterpret_cast<char*>(tx);
-        valy = reinterpret_cast<char*>(ty);
-
-        //拼接到将要发送的字符串的后面(按照x,y的顺序)
-        buffer.append(valx);
-        buffer.append(valy);
+        tostr(point.y, point_str, NUM_ECC_DIGITS)
+            buffer.append(point_str);
     }
-    //释放中间内存
-    FREE(tx); FREE(ty); FREE(valx); FREE(valy);
+
+#ifdef __SM2_DEBUG__
+    MES_INFO << "the sending data is: " << buffer << endl;
 
     //数据传输
-    const char* mess = buffer.c_str();
-    int ret = send(mSocket,mess,strlen(mess),0);
-    if(ret == SOCKET_ERROR || ret == 0)
+    const char *mess = buffer.c_str();
+    int ret = send(mSocket, mess, strlen(mess), 0);
+    if (ret == SOCKET_ERROR || ret == 0)
     {
-        if(mSocket == INVALID_SOCKET)
+        if (mSocket == INVALID_SOCKET)
         {
             MES_ERROR << "the client socket is invalid\n";
         }
@@ -680,7 +637,7 @@ int SM2Client::send(vector<EccPoint>& points)
     }
 
     MES_INFO << "successfully sending data to Server\n";
-    
+
     //释放内存
     delete mess;
 
@@ -689,40 +646,64 @@ int SM2Client::send(vector<EccPoint>& points)
 
 vector<EccPoint> SM2Client::Recv()
 {
-
     //1、接收数据
     char data[65535];
     int ret;
-    while((ret = recv(mSocket,data,65535,0)) <= 0 && errno == EINTR)
+    while ((ret = recv(mSocket, data, 65535, 0)) <= 0 && errno == EINTR)
     {
         Sleep(1);
     }
 
-    if(ret <= 0 && errno != EINTR)
+    //1.1 利用接收函数检测连接的有效性
+    if (ret <= 0 && errno != EINTR)
     {
         MES_ERROR << "the connection has closed,shut down the calculating\n";
         return 0;
     }
 
+    data[ret] = '\0'; //如果能够接收，则recv()返回的是数据的长度
     MES_INFO << "receive the data from server,transforming data..\n";
 
     //2、数据处理(从char[65535]中提取数据并转换为EccPoint类型)
     //数据的结构: 首部+数据
     //需要先提取首部，从首部中获取对应的数据定义和数据长度
     //根据数据定义和数据长度来对数据进行相应的处理
-    
+
     //2.1 提取数据的首部信息(点的数量)
-    
+    int length = atoi(data[0]);
 
     //2.2 依次提取
     vector<EccPoint> points;
     EccPoint point;
-    
+
+    char *tempData = new char[NUM_ECC_DIGITS * 2];
+    uint8_t *data_convrt = new uint8_t[NUM_ECC_DIGITS];
+    for (int i = 0; i < length; ++i)
+    {
+        memcpy(tempData, &data[i * NUM_ECC_DIGITS * 4 + 1], NUM_ECC_DIGITS * 2);
+
+#ifdef __SM2_DEBUG__
+        MES_INFO << "the No." << i + 1 << "receiving data1: "
+                 << tempData << endl;
+#endif //__SM2_DEBUG__
+
+        data_convrt = reinterpret_cast<uint8_t *>(tempData);
+        tohex(data_convrt, &point.x, NUM_ECC_DIGITS);
 
 
-    MES_INFO <<"successfully transforming data..\n";
+        memcpy(tempData, &data[i * NUM_ECC_DIGITS * 4 + 1 + NUM_ECC_DIGITS * 2], NUM_ECC_DIGITS * 2);
+
+#ifdef __SM2_DEBUG__
+        MES_INFO << "the No." << i + 1 << "receiving data2: "
+                 << tempData << endl;
+#endif //__SM2_DEBUG__
+
+        data_convrt = reinterpret_cast<uint8_t*>(tempData);
+        tohex(data_convrt,&point.y,NUM_ECC_DIGITS);
+    }
+
+    MES_INFO << "successfully transforming data..\n";
     return points;
-
 }
 
 int SM2Client::disconnect()
@@ -730,12 +711,10 @@ int SM2Client::disconnect()
     //断开连接的操作有待思考
 
     //单纯有这一步是没有办法完成断开连接的操作的
-    if(mSocket != INVALID_SOCKET)
+    if (mSocket != INVALID_SOCKET)
     {
         closesocket(mSocket);
     }
-
-
 
     return 1;
 }

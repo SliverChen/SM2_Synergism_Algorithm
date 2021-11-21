@@ -42,6 +42,7 @@ Create in 2021 / 11 / 16
 
 - 协同解密的过程
 
+- 注释的规范 参考: https://www.jianshu.com/p/9464eca6aefe
     
 
 ### 设计难点一(首要目标)

@@ -24,9 +24,16 @@
 #include<cstdlib>
 #include<iomanip>
 
+//随机数生成
+#include <./3rdParty/include/openssl/bn.h>
+
 using namespace std;
 #pragma comment(lib,"ws2_32.lib")
-
+#pragma comment(lib, "libapps.lib")
+#pragma comment(lib, "libcrypto.lib")
+#pragma comment(lib, "libssl.lib")
+#pragma comment(lib, "libssl_static.lib")
+#pragma comment(lib, "openssl.lib")
 
 static SYSTEMTIME systemTime;
 #define MES_INFO GetLocalTime(&systemTime);\

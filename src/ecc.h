@@ -15,6 +15,11 @@
 extern "C"{
 #endif 
 
+/*
+*   Create the random string between [1,n-1]
+*   @param randStr the random string in 'uint8_t*' type that created
+ */
+void makeRandom(uint8_t*& randStr);
 
 /*
     Convert an integer in standard octet representation to the native format.

@@ -26,6 +26,26 @@ extern "C"
         }
     }
 
+    void tostr(const uint8_t *source,string& result,int len)
+    {
+        int i;
+
+        //这里开辟len*2主要是让sprintf_s开辟足够的缓存空间
+        //让一整串字符都实现格式匹配(sprintf_s的第二个参数设置缓存大小)
+        char* ch = new char[len*2];
+        for(i = 0;i<len;++i)
+        {
+            //采用格式串的方式获取hex的字符串形式
+            sprintf_s(ch,len*2,"%02X",source[i]);
+
+            //这里说明了用string的原因
+            //char*的拼接不安全
+            //char*拼接属于未知长度的char字符串的处理
+            result.append(ch);
+        }
+        FREE(ch);
+    }
+
     static void vli_clear(uint8_t *p_vli)
     {
         unsigned int i;

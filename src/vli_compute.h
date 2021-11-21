@@ -18,12 +18,21 @@ extern "C" {
 #define EVEN(vli) (!(vli[0] & 1))
 
 /*
-    make the string into the representation of hex
-    @param source the converted string
-    @param result the representation of hex after converting
-    @param len the length of the source string
-*/
+ *   make the string with type 'uint8_t[] / uint8_t*' into the representation of hex \n
+ *   @brief uint8_t str[] = "123123"  convert to  hex: uint8_t val[3] = {0x12, 0x31, 0x23}
+ *   @param source the converted string
+ *   @param result the representation of hex after converting
+ *   @param len the length of the source string
+ */
 void tohex(const uint8_t* source,uint8_t* result,int len);
+
+/*
+    make the representation of hex into string type
+    @brief source the representation of hex before converting
+    @brief result the string after converting
+    @param len the length of the representation of hex
+*/
+void tostr(const uint8_t* source,string& result,int len);
 
 /*
     clear the value

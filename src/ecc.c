@@ -4,6 +4,49 @@
 extern "C"{
 #endif //__cplusplus
 
+	void makeRandom(uint8_t*& randStr)
+	{
+		/* 1、将基点的阶curve_n转换为hex的字符串 */
+		string curveN_str;
+		tostr(curve_n, curveN_str, NUM_ECC_DIGITS);
+		char* curveN = const_cast<char*>(curveN_str.c_str());
+
+		/* 2、将转换后的hex字符串转换为BIGNUM类型(用于后续限定随机数生成的范围) */
+		BIGNUM* cn = BN_hex2bn(curveN);
+
+		/* 3、生成随机数 */
+		BIGNUM* bn = BN_new(); //需要先申请空间，不然会出错
+
+		//比特长度
+		int bits = 8 * NUM_ECC_DIGITS;
+
+		//BN_rand_range: 生成[0,range)的随机数
+		//参考: https://www.openssl.org/docs/man3.0/man3/BN_rand_range.html
+
+		//随机数需要的区间为[1,n-1],由于该函数会生成0
+		//因此需要检验生成数是否为0，如果是则需要重新生成
+		do
+		{
+			BN_rand_range(bn, cn);
+		} while (BN_is_zero(bn));
+
+		//将BIGNUM转换为16进制的char*字符串
+		char* str = BN_bn2hex(bn);
+
+		//将char* 转换为unsigned char*
+		//(只能使用强制类型转换,无法使用static_cast，因为这两个是不同的类型)
+		//只有char 和 unsigned char能进行static_cast的转换
+		randStr = reinterpret_cast<unsigned char*>(str);
+
+#ifdef __SM2_DEBUG__
+		MES_INFO << " the random is defined as: " << randStr << endl;
+#endif //__SM2_DEBUG__
+
+		/* 4、释放BIGNUM内存 */
+		BN_free(bn);
+		BN_free(cn);
+	}
+
 	void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t P_native[NUM_ECC_DIGITS])
 	{
 		unsigned int i;
