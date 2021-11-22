@@ -107,10 +107,11 @@ class SM2Client : public SM2Socket
 
         /*
             @brief 协同计算下的发送函数
-            @param 将要发送的一组EccPoint类型数据
+            @param points 将要发送的一组EccPoint类型数据
+            @param 发送的数据的标识(标识数据存在的过程:生成公钥,签名,解密)
             @returns 1 if send successfully, 0 otherwise
         */
-        int Send(vector<EccPoint>&);
+        int Send(vector<EccPoint>& points,int signal);
         
         //为了让接收函数更具通用性，将接收的数据以vector的形式存储返回
         //在函数内部同时实现对接收数据的数据类型转换

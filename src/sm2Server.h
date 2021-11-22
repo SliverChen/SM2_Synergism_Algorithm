@@ -1,4 +1,4 @@
-#ifndef HEADER_SM2SERVER_H
+é”˜ï¿½#ifndef HEADER_SM2SERVER_H
 #define HEADER_SM2SERVER_H
 
 #pragma once
@@ -6,30 +6,31 @@
 #include"sock_param.h"
 
 /*
-*	@brief SM2·şÎñ¶ËÀà
-*	ÓÃÓÚ±íÊ¾SM2ÏÂµÄ·şÎñ¶Ë
+*	@brief SM2 æœåŠ¡ç«¯ç±»
+*	ç”¨äºååŠ©å®¢æˆ·ç«¯è®¡ç®—å…¬é’¥,ç­¾åå’Œè§£å¯†
 */
 class SM2Server : public SM2Socket
 {
 public:
 	/*
-	*	@brief ³õÊ¼»¯socket»·¾³ºÍsocket±äÁ¿
+	*	@brief åˆå§‹åŒ–wsaç¯å¢ƒå’Œsocketå˜é‡
+	*	@param port å¼€æ”¾çš„ç«¯å£å·
 	*/
-	SM2Server();
+	SM2Server(int port);
 
 	/*
-	* ÊÍ·ÅÄÚ´æ£¬Çå³ı»·¾³
+	*	@brief æ¸…ç†ç¯å¢ƒè®¾ç½®ï¼Œé‡Šæ”¾socket
 	*/
 	~SM2Server();
 
 	/*
-	*	@brief Éú³ÉË½Ô¿
+	*	@brief ç”Ÿæˆç§é’¥
 	*/
 	void create_private_key();
 
 	/*
-	*	@brief »ñÈ¡ÒÑÉú³ÉµÄ¹«Ô¿
-	*	@returns EccPointĞÎÊ½µÄ¹«Ô¿
+	*	@brief 	è·å–ç¬¬iä¸ªå®¢æˆ·ç«¯ä¸‹çš„å…¬é’¥
+	*	@returns å…¬é’¥åœ¨æ¤­åœ†æ›²çº¿ä¸Šçš„ç‚¹
 	*/
 	EccPoint getPublicKey(int index);
 
@@ -38,65 +39,58 @@ public:
 
 private:
 	/*
-	*	@brief Ğ­Í¬¼ÆËãÇ©Ãû(Ğ­Öú·½)
+	*	@brief ååŠ©å®¢æˆ·ç«¯ç­¾å
 	*	@returns 1 if success, 0 otherwise
 	*/
-	bool CalData_sign();
+	bool CalData_sign(vector<EccPoint>& points);
 
 	/*
-	*	@brief ·şÎñ¶ËĞ­Í¬¼ÆËã½âÃÜ(Ğ­Öú·½)
+	*	@brief ååŠ©å®¢æˆ·ç«¯è§£å¯†
 	*	@returns 1 if success, 0 otherwise
 	*/
-	bool CalData_decrypt();
+	bool CalData_decrypt(vector<EccPoint>& points);
 
 	/*
-	*	@brief Ğ­Í¬¼ÆËã¹«Ô¿
-	*	@param point ¿Í»§¶Ë¼ÆËãµÄÖĞ¼äÖµ
+	*	@brief ä¸å®¢æˆ·ç«¯åˆä½œç”Ÿæˆå…¬é’¥
+	*	@param point å®¢æˆ·ç«¯ä¼ æ¥çš„ä¸­é—´å˜é‡
 	*	@returns 1 if success, 0 otherwise
 	*/
-	bool CalData_createPubKey(EccPoint& point);
+	bool CalData_createPubKey(vector<EccPoint>& points);
 
 
 	/*
-	*	@brief ¶Ï¿ªÓë¿Í»§¶ËµÄÁ¬½Ó
+	*	@brief æ–­å¼€è¿æ¥
 	*	@returns 1 if success, 0 otherwise
 	*/
 	int disconnect();
 
 	/*
-	*	@brief ·¢ËÍÊı¾İµ½¶Ô¶Ë
-	*	@param points: ½«Òª·¢ËÍµÄÓÉ¶à¸öEccPointÊı¾İ¹¹³ÉµÄÊı×é
+	*	@brief å‘é€æ•°æ®åˆ°å¯¹ç«¯
+	*	@param points: å°†è¦å‘é€çš„ä¸€ç»„EccPointç±»å‹çš„æ•°æ® 
 	*	@returns 1 if success, 0 otherwise
 	*/
 	int Send(vector<EccPoint>& points);
 
 
 	/*
-	*	@brief ½ÓÊÕ¶Ô¶Ë·¢ËÍµÄÊı¾İ
-	*	@returns ÓÉÒ»¸ö»ò¶à¸öEccPointÊı¾İ¹¹³ÉµÄÊı×é
+	*	@brief æ¥æ”¶å¯¹ç«¯å‘é€çš„æ•°æ®
+	*	@returns ä¸€ç»„EccPointç±»å‹çš„æ•°æ®
 	*/
-	vector<EccPoint> Recv();
+	bool Recv();
 
 
 	/*
-	*	@brief ÅĞ¶ÏÊÇ·ñÁ¬½Ó
+	*	@brief æ£€æµ‹æ˜¯å¦æ­£å¸¸è¿æ¥
 	*	@returns 1 if connected, 0 otherwise
 	*/
 	bool isConnected();
 
 private:
-	uint8_t* m_priKey;            //Ë½Ô¿
-	vector<uint8_t*> m_pubKey_x;  //ËùÓĞ¿Í»§¶Ë¹«Ô¿ÔÚÍÖÔ²ÇúÏßÏÂµÄx
-	vector<uint8_t*> m_pubKey_y;  //ËùÓĞ¿Í»§¶Ë¹«Ô¿ÔÚÍÖÔ²ÇúÏßÏÂµÄy
-	SOCKET mSocket;               //·şÎñ¶Ësocket±äÁ¿
-	sockaddr mAddr;               //·şÎñ¶ËµÄµØÖ·ĞÅÏ¢ 
-	vector<SOCKET> clientSocket;  //¿Í»§¶ËµÄsocket±äÁ¿³Ø
+	uint8_t* m_priKey;            //ç§é’¥
+	vector<uint8_t*> m_pubKey_x;  //å…¬é’¥åœ¨æ¤­åœ†æ›²çº¿ä¸Šçš„æ¨ªåæ ‡xçš„é›†åˆ
+	vector<uint8_t*> m_pubKey_y;  //å…¬é’¥åœ¨æ¤­åœ†æ›²çº¿ä¸Šçš„çºµåæ ‡yçš„é›†åˆ
+	SOCKET mSocket;               //æœåŠ¡ç«¯ä¸‹çš„socketå˜é‡
+	sockaddr_in mAddr;            //æœåŠ¡ç«¯çš„socketåœ°å€ 
+	sockaddr_in clientsAddr;       //å®¢æˆ·ç«¯çš„socketåœ°å€ 
+	vector<SOCKET> clientsSocket;  //å·²è¿æ¥çš„å®¢æˆ·ç«¯çš„socketå˜é‡(ç”¨äºåç»­çš„å¯¹ç‚¹å‘é€)
 };
-
-/*
-* ²¹³ä£º¸Ğ¾õÊ¹ÓÃvector¹ÜÀí¿Í»§¶ËµÄsocketºÍ¹«Ô¿ºóĞø²»ºÃ´¦Àí
-* ¼ÙÉèÒ»ÏÂ£¬Èç¹ûÏÈºóÓĞÈı¸ö¿Í»§¶ËÉêÇëĞ­Í¬¼ÆËã£¬ÖĞ¼äÒ»¸öÒòÎªÍøÂçºÜ¿ìÌáÇ°½áÊø¼ÆËã¹ı³Ì£¬²¢´ÓÁĞ±íÖĞÇå³ı
-* Èç¹û´ËÊ±ÓĞµÚËÄ¸ö¿Í»§¶ËÉêÇëĞ­Í¬¼ÆËã£¬³ı·Ç¼ÇÂ¼µ±Ç°Êı×éÓĞÄÄĞ©Ë÷ÒıÊÇ¿ÕµÄ
-* ·ñÔòÏµÍ³ÎŞ·¨×ÔĞĞÅĞ¶ÏµÚ¶ş¸öÎ»ÖÃÊÇ¿ÕµÄ£¬Ö±½Ó²åÈëµ½ºóÃæ
-* Èç¹ûÒ»Ö±±£³ÖÕâÑùµÄ²Ù×÷£¬Õâ¸öÊı×éµÄ¹æÄ£»á²»¶Ï±ä´ó£¬ÏûºÄÁËÒ»Ğ©Ã»ÓĞ±ØÒªµÄÄÚ´æ
-*/

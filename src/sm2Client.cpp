@@ -74,7 +74,7 @@ void SM2Client::create_public_key()
     Send(data);
 
     //5、接收P = d1*d2G-G
-    data = recv();
+    data = Recv();
 
     //6、接收后倒回来
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
@@ -556,16 +556,25 @@ EccPoint SM2Client::CalData_decrypt(const EccPoint &C1)
     send(decry_client_param1);
     decry_client_param1->clear();
     FREE(decry_client_param1);
+    
+    //后续客户端不再发送数据，此时可以关掉发送通道
+    //让客户端与服务端的连接处于半关闭的状态
+    //此时只需要等待服务端最后计算好的数据发过来，连接即可断开
+    shutdown(mSocket, SD_SEND);
 
     //4、接收服务端发送的Q2,Q3
     vector<EccPoint> *decry_client_param2 = recv();
+
+    //5、接收完之后即可断开连接
+    disconnect();
+
     EccPoint Q2 = decry_client_param2->at(0);
     EccPoint Q3 = decry_client_param2->at(1);
 
-    //5、计算(x2,y2)=Q2-k1Q3+(d1-1)C1
+    //6、计算(x2,y2)=Q2-k1Q3+(d1-1)C1
     EccPoint x2y2;
 
-    //5.1 计算k1Q3
+    //6.1 计算k1Q3
     uint8_t *k1_mult_Q3 = new uint8_t[NUM_ECC_DIGITS];
     EccPoint k1Q3, k1Q3_revrt;
     EccPoint_mult(&k1Q3, &Q3, k1, NULL);
@@ -574,10 +583,12 @@ EccPoint SM2Client::CalData_decrypt(const EccPoint &C1)
         k1Q3_revrt.x[i] = k1Q3[NUM_ECC_DIGITS - i - 1];
         k1Q3_revrt.y[i] = k1Q3[NUM_ECC_DIGITS - i - 1];
     }
-    //5.2 计算Q2-k1Q3
+
+    //6.2 计算Q2-k1Q3
     EccPoint Q2_k1Q3;
 
-    //6、返回P=(x2,y2)
+
+    //7、返回P=(x2,y2)
     return x2y2;
 }
 
@@ -596,7 +607,7 @@ int SM2Client::Connect(const string &ip, int port)
     return 1;
 }
 
-int SM2Client::send(vector<EccPoint> &points)
+int SM2Client::Send(vector<EccPoint> &points,int signal)
 {
     MES_INFO << "sending data to the server..\n";
     //数据预处理(从EccPoint类型转换为char*类型)
@@ -607,7 +618,10 @@ int SM2Client::send(vector<EccPoint> &points)
 
     int size = points->size();
 
-    string buffer = to_string(size);
+    /* 传输数据的格式: 标识+点数量+点数据 */
+    string buffer = to_string(signal);
+    buffer.append(to_string(size));
+
     string point_str;
     for (auto point : points)
     {
@@ -641,11 +655,15 @@ int SM2Client::send(vector<EccPoint> &points)
     //释放内存
     delete mess;
 
-    return 0;
+    return 1;
 }
 
 vector<EccPoint> SM2Client::Recv()
 {
+    /*
+    *  这里不需要对数据进行提取标识的操作
+    *  因为客户端处于主动发送的一方，本身知道目前正在进行哪个步骤，只需获取长度和数据即可
+    */
     //1、接收数据
     char data[65535];
     int ret;
@@ -700,6 +718,8 @@ vector<EccPoint> SM2Client::Recv()
 
         data_convrt = reinterpret_cast<uint8_t*>(tempData);
         tohex(data_convrt,&point.y,NUM_ECC_DIGITS);
+    
+        points.push_back(point);
     }
 
     MES_INFO << "successfully transforming data..\n";
@@ -710,7 +730,7 @@ int SM2Client::disconnect()
 {
     //断开连接的操作有待思考
 
-    //单纯有这一步是没有办法完成断开连接的操作的
+    //这个操作需要双方都执行这一步算是断开连接
     if (mSocket != INVALID_SOCKET)
     {
         closesocket(mSocket);
