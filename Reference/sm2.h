@@ -11,7 +11,10 @@ extern "C"
 #include <stdint.h>
 
 /*Define to enable SM2 debug function*/
-//#define __SM2_DEBUG__
+// #define __SM2_DEBUG__
+
+/* 测试翻转的意义 */
+// #define __SM2_TEST__
 
 /* Define as 1 to enable ECDSA functions, 0 to disable.
  */

@@ -131,8 +131,6 @@ int ecc_valid_public_key(EccPoint* p_publicKey);
 int ecdh_shared_secret(uint8_t p_secret[NUM_ECC_DIGITS],EccPoint* p_publicKey,
     uint8_t p_privateKey[NUM_ECC_DIGITS],uint8_t p_random[NUM_ECC_DIGITS]);
 
-
-
 #ifdef __cplusplus
 }
 #endif //__cplusplus

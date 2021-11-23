@@ -249,6 +249,28 @@ bool SM2Server::Recv()
 bool SM2Server::CalData_createPubKey(vector<EccPoint>& points)
 {
 
+	/*
+		这里需要注意一个问题
+		当服务端计算好公钥时，如何将公钥对外公开？
+		方案一：我们在通用类下创建一个公钥的静态成员
+		当我们修改这个静态成员时，它的所有派生类下的公钥都将被同步修改
+		这个方案不太适用
+		原因：服务端与客户端是在不同程序下运行，静态成员无法跨越程序
+
+		方案二：在计算好之后将结果也发送给客户端
+		这样会耗费一次发送接收的时间(目前没有想到更好的办法)
+	*/
+
+
+	//1、接收d1G
+	
+	//2、计算d1d2G
+	EccPoint d1d2G;
+	EccPoint_mult(&d1d2G,&points[0],m_priKey,NULL);
+
+	//3、计算P = d1d2G - G
+	
+
 }
 
 

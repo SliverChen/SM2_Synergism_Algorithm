@@ -363,7 +363,7 @@ int SM2Client::Decrypt_SM2(
     return ret;
 }
 
-int SM2Client : sm2_decrypt(
+int SM2Client::sm2_decrypt(
                     uint8_t *plain_text, unsigned int *plain_len,
                     uint8_t *cipher_text, unsigned int cipher_len,
                     uint8_t p_privateKey[NUM_ECC_DIGITS])

@@ -1,4 +1,4 @@
-锘�#ifndef HEADER_SM2SERVER_H
+#ifndef HEADER_SM2SERVER_H
 #define HEADER_SM2SERVER_H
 
 #pragma once
@@ -32,7 +32,7 @@ public:
 	*	@brief 	获取第i个客户端下的公钥
 	*	@returns 公钥在椭圆曲线上的点
 	*/
-	EccPoint getPublicKey(int index);
+	EccPoint getPublicKey();
 
 
 	void listenClient();
@@ -87,10 +87,12 @@ private:
 
 private:
 	uint8_t* m_priKey;            //私钥
-	vector<uint8_t*> m_pubKey_x;  //公钥在椭圆曲线上的横坐标x的集合
-	vector<uint8_t*> m_pubKey_y;  //公钥在椭圆曲线上的纵坐标y的集合
+	vector<uint8_t*> m_pubKey_x;  //公钥横坐标x集合
+	vector<uint8_t*> m_pubKey_y;  //公钥纵坐标y集合
 	SOCKET mSocket;               //服务端下的socket变量
 	sockaddr_in mAddr;            //服务端的socket地址 
 	sockaddr_in clientsAddr;       //客户端的socket地址 
 	vector<SOCKET> clientsSocket;  //已连接的客户端的socket变量(用于后续的对点发送)
 };
+
+#endif

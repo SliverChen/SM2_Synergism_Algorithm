@@ -25,7 +25,7 @@
 #include<iomanip>
 
 //随机数生成
-#include <./3rdParty/include/openssl/bn.h>
+#include "../3rdParty/include/openssl/bn.h"
 
 using namespace std;
 #pragma comment(lib,"ws2_32.lib")

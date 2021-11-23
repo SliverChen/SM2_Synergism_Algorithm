@@ -181,15 +181,13 @@ class SM2Client : public SM2Socket
             unsigned int* plain_len,
             uint8_t* cipher_text,
             unsigned int cipher_len,
-            uint8_t p_privateKey[NUM_ECC_DIGITS],
-            const string& ip,
-            int port
+            uint8_t p_privateKey[NUM_ECC_DIGITS]
         );
 
     private:
         uint8_t* m_priKey;            //私钥
-        uint8_t* m_pubKey_x;          //公钥在椭圆曲线下的x
-        uint8_t* m_pubKey_y;          //公钥在椭圆曲线下的y
+        uint8_t* m_pubKey_x;          //公钥在椭圆曲线上的横坐标x
+        uint8_t* m_pubKey_y;          //公钥在椭圆曲线上的纵坐标y
         SOCKET mSocket;               //客户端socket变量
         sockaddr server;              //服务端的地址信息
 };
