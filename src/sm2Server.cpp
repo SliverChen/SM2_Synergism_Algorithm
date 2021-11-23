@@ -6,7 +6,7 @@ SM2Server::SM2Server(int port)
 	WORD sockVersion = MAKEWORD(2, 2);
 	if (WSAStartup(sockVersion, &wsaData) != 0)
 	{
-		MES_ERROR << "cannot start wsa,please check socket version\n";
+		MES_ERROR("cannot start wsa,please check socket version\n");
 		WSACleanup();
 		exit(-1);
 	}
@@ -14,7 +14,7 @@ SM2Server::SM2Server(int port)
 	//初始化socket变量
 	if ((mSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
 	{
-		MES_ERROR << "cannot create the socket, please check your settings\n";
+		MES_ERROR("cannot create the socket, please check your settings\n");
 		exit(-1);
 	}
 
@@ -28,7 +28,7 @@ SM2Server::SM2Server(int port)
 	//为socket变量和socketaddr变量进行绑定的操作
 	if (bind(mSocket, (SOCKADDR*)&mAddr, sizeof(mAddr)) == SOCKET_ERROR)
 	{
-		MES_ERROR << "can not bind the socket and sockAddr,please check the settings\n";
+		MES_ERROR("can not bind the socket and sockAddr,please check the settings\n");
 		exit(-1);
 	}
 
@@ -76,12 +76,12 @@ EccPoint SM2Server::getPublicKey(int index)
 
 void SM2Server::listenClient()
 {
-	MES_INFO << "waiting for the connecting..\n";
+	MES_INFO("waiting for the connecting..\n");
 
 	//第二个参数设置的是待处理连接请求的最大长度
 	if (listen(mSocket, SOMAXCONN) == SOCKET_ERROR)
 	{
-		MES_ERROR << "unexpected error in function 'listen'\n";
+		MES_ERROR("unexpected error in function 'listen'\n");
 		exit(-1);
 	}
 
@@ -91,12 +91,12 @@ void SM2Server::listenClient()
 	socketaddr_in clientAddr;
 	if ((client = accept(mSocket, (SOCKADDR*)&clientAddr, &clientAddrLen)) == SOCKET_ERROR)
 	{
-		MES_ERROR << "unexpected error in function 'accept'\n";
+		MES_ERROR("unexpected error in function 'accept'\n");
 		exit(-1);
 	}
 
 	//inet_ntoa: 将ip地址转换为十进制的形式
-	MES_INFO << "successfully connecting with %s \n", inet_ntoa(clientAddr.sin_addr));
+	MES_INFO("successfully connecting with %s \n", inet_ntoa(clientAddr.sin_addr));
 }
 
 int SM2Server::disconnect()
@@ -117,7 +117,7 @@ int SM2Server::Send(veector<EccPoint>& points)
 	*  但是这里的发送需要指明客户端的socket变量
 	*/
 
-	MES_INFO << "sending data to the client..\n";
+	MES_INFO("sending data to the client..\n");
 
 	//1、数据处理
 	int size = points->size();
@@ -137,7 +137,7 @@ int SM2Server::Send(veector<EccPoint>& points)
 	}
 
 #ifdef __SM2_DEBUG__
-	MES_INFO << "the sending data is: " << buffer << endl;
+	MES_INFO("the sending data is: %s\n",buffer);
 #endif //__SM2_DEBUG__
 
 	//2、数据传输
@@ -149,13 +149,13 @@ int SM2Server::Send(veector<EccPoint>& points)
 	{
 		if (mSocket == INVALID_SOCKET)
 		{
-			MES_ERROR << "the server socket is invalid\n";
+			MES_ERROR("the server socket is invalid\n");
 		}
-		MES_ERROR << "can not send the message, please check the sockAddr.\n";
+		MES_ERROR("can not send the message, please check the sockAddr.\n");
 		return 0;
 	}
 
-	MES_INFO << "successfully sending data to client.\n";
+	MES_INFO("successfully sending data to client.\n");
 
 	//3、释放内存
 	delete mess;
@@ -176,12 +176,12 @@ bool SM2Server::Recv()
 	//1.1 利用接收函数检测连接有效性
 	if (ret <= 0 && errno != EINTR)
 	{
-		MES_ERROR << "the connection has closed, shut down the calculating\n";
+		MES_ERROR("the connection has closed, shut down the calculating\n");
 		return 0;
 	}
 
 	data[ret] = '\0';  //如果成功接收,则recv()返回的是数据的长度
-	MES_INFO << "receiving the data from client, transforming data..\n";
+	MES_INFO("receiving the data from client, transforming data..\n");
 
 	//2、数据处理(从char[65535]中提取数据标识,数据长度,数据本身，并将数据转换为EccPoint类型)
 	//数据的结构: 首部(标识+长度)+数据
@@ -201,8 +201,7 @@ bool SM2Server::Recv()
 		memcpy(tempData, &data[i * NUM_ECC_DIGITS * 4 + 2], NUM_ECC_DIGITS * 2);
 
 #ifdef __SM2_DEBUG__
-		MES_INFO << "the No. " << i + 1 << "receving data1: "
-			<< tempData << endl;
+		MES_INFO("the No.%d receiving data1: %s\n",i+1,tempData);
 #endif //__SM2_DEBUG__
 
 		data_convrt = reinterpret_cast<uint8_t*>(tempData);
@@ -211,8 +210,7 @@ bool SM2Server::Recv()
 		memcpy(tempData, &data[i * NUM_ECC_DIGITS * 4 + 2 + NUM_ECC_DIGITS * 2], NUM_ECC_DIGITS * 2);
 
 #ifdef __SM2_DEBUG__
-		MES_INFO << "the No. " << i + 1 << "receiving data2: "
-			<< tempData << endl;
+		MES_INFO("the No.%d receiving data2: %s\n",i+1,tempData);
 #endif //__SM2_DEBUG__
 
 		data_convrt = reinterpret_cast<uint8_t*>(tempData);
@@ -221,7 +219,7 @@ bool SM2Server::Recv()
 		points.push_back(point);
 	}
 
-	MES_INFO << "successfully transforming data\n";
+	MES_INFO("successfully transforming data\n");
 
 	//3、根据标识调用特定的数据计算函数
 	bool flag = false;
@@ -239,7 +237,7 @@ bool SM2Server::Recv()
 		break;
 
 	default:
-		MES_ERROR << "can not analysis the singal, which is " << signal << endl;
+		MES_ERROR("can not analysis the singal, which is %d\n",signal);
 		break;
 	};
 

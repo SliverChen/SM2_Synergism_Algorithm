@@ -8,6 +8,8 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
+                "-I'${workspaceFolder}/3rdParty/include'",
+                "-L'${workspaceFolder}/3rdParty/lib'",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],

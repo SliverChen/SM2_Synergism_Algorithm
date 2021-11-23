@@ -3,8 +3,16 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/3rdParty/include",
+                "${workspaceRoot}"
             ],
+            "browse": {
+                "path": [
+                    "${workspaceRoot}",
+                    "${workspaceFolder}/3rdParty/lib"
+                ]
+            },
             "defines": [
                 "_DEBUG",
                 "UNICODE",

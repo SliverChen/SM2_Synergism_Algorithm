@@ -6,7 +6,14 @@
 #include"common.h"
 #include"sm3.h"
 #include"ecc.h"
-#include<WinSock2.h>
+#include<vector>
+
+using std::vector;
+
+//多线程相关
+#include<mutex>
+#include<thread>
+#include<stdint.h>
 
 //WSA版本
 static WSADATA wsaData;
@@ -35,6 +42,10 @@ constexpr auto DECRYPT_Q1 = 1;
 
 /* 签名时客户端发送的P1分量*/
 constexpr auto SIGN_P1 = 2;
+
+//内存相关
+#define FREE(x) delete x;x=nullptr;
+#define FREEARRAY(x) delete[] x;x=nullptr;
 
 
 #endif //HEADER_SOCK_PARAM_H

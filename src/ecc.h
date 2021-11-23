@@ -16,12 +16,6 @@ extern "C"{
 #endif 
 
 /*
-*   Create the random string between [1,n-1]
-*   @param randStr the random string in 'uint8_t*' type that created
- */
-void makeRandom(uint8_t*& randStr);
-
-/*
     Convert an integer in standard octet representation to the native format.
     @param p_bytes the converted integer with the standard octet representation
     @param p_native the native integer value after converting

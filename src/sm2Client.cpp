@@ -6,7 +6,7 @@ SM2Client::SM2Client()
     WORD sockVersion = MAKEWORD(2, 2);
     if (WSAStartup(sockVersion, &wsaData) != 0)
     {
-        MES_ERROR << "cannot start wsa, please check socket version\n";
+        MES_ERROR("cannot start wsa, please check socket version\n");
         WSACleanup();
         exit(-1);
     }
@@ -14,7 +14,7 @@ SM2Client::SM2Client()
     //初始化socket变量
     if ((mSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == INVALID_SOCKET)
     {
-        MES_ERROR << "cannot create the socket,please check your setting\n";
+        MES_ERROR("cannot create the socket,please check your setting\n");
         exit(-1);
     }
 
@@ -111,7 +111,7 @@ int SM2Client::getE(
 
 #ifdef __SM2_DEBUG__
     int i = 0;
-    MES_INFO << "Hash: ";
+    MES_INFO("Hash: ");
     for (i = 0; i < 32; ++i)
         printf("%02X", e[i]);
     printf("\n");
@@ -276,7 +276,7 @@ int SM2Client::sm2_encrypt(
     }
     if (EccPoint_isZero(&Pb))
     {
-        MES_ERROR << "S is at infinity...\n";
+        MES_ERROR("S is at infinity...\n");
         return 0;
     }
 
@@ -297,7 +297,7 @@ int SM2Client::sm2_encrypt(
     {
         if (vli_isZero(p_publicKey->x))
         {
-            MES_ERROR << "the part \"R\" equals 0, need a different random number.\n";
+            MES_ERROR("the part \"R\" equals 0, need a different random number.\n");
         }
         return 0;
     }
@@ -338,7 +338,7 @@ int SM2Client::Decrypt_SM2(
     //1、连接到服务端，同时检查连接的有效性
     if (Connect(ip, port) != SUCCESS)
     {
-        MES_ERROR << "can not finish the decryption.\n";
+        MES_ERROR("can not finish the decryption.\n");
         return 0;
     }
 
@@ -398,33 +398,32 @@ int SM2Client::sm2_decrypt(
     ret = EccPoint_is_on_curve(C1);
     if (1 != ret)
     {
-        MES_ERROR << "C1 error,please check the function\n";
+        MES_ERROR("C1 error,please check the function\n");
         return 0;
     }
 
     //B2:h=1;S=[h]C1;
     if (EccPoint_isZero(&C1))
     {
-        MES_ERROR << "S is at infinity...\n";
+        MES_ERROR("S is at infinity...\n");
         return 0;
     }
 
 #ifdef __SM2_DEBUG__
-    MES_INFO << "p_privateKey: ";
+    MES_INFO("p_privateKey: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", p_pvk[i]);
     }
-    printf("\n");
 
-    MES_INFO << "cipher->C1.x: ";
+    MES_INFO("cipher->C1.x: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.x[i]);
     }
     printf("\n");
 
-    MES_INFO << "cipher->C1.y: ";
+    MES_INFO("cipher->C1.y: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.y[i]);
@@ -437,14 +436,14 @@ int SM2Client::sm2_decrypt(
     EccPoint point2 = CalData_decrypt(C1);
 
 #ifdef __SM2_DEBUG__
-    MES_INFO << "point2.x: ";
+    MES_INFO("point2.x: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", point2.x[i]);
     }
     printf("\n");
 
-    MES_INFO << "point2.y: ";
+    MES_INFO("point2.y: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", point2.y[i]);
@@ -461,20 +460,20 @@ int SM2Client::sm2_decrypt(
 
     if (vli_isZero(plain_text))
     {
-        MES_ERROR << "the part \"r\" of the text equals 0"
-                  << ", which needs a different random number.\n";
+        MES_ERROR("the part \"r\" of the text equals 0");
+        printf(", which needs a different random number.\n");
         return 0;
     }
 
 #ifdef __SM2_DEBUG__
-    MES_INFO << "kdf out: ";
+    MES_INFO("kdf out: ");
     for (i = 0; i < *plain_len; ++i)
     {
         printf("%02X", plain_text[i]);
     }
     printf("\n");
 
-    MES_INFO << "C2: ";
+    MES_INFO("C2: ");
     for (i = 0; i < C2_len; ++i)
     {
         printf("%02X", p_C2[i]);
@@ -497,7 +496,7 @@ int SM2Client::sm2_decrypt(
     sm3_finish(&sm3_ctx, mac);
 
 #ifdef __SM2_DEBUG__
-    MES_INFO << "mac: ";
+    MES_INFO("mac: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", mac[i]);
@@ -505,7 +504,7 @@ int SM2Client::sm2_decrypt(
 
     printf("\n");
 
-    MES_INFO << "cipher->M: ";
+    MES_INFO("cipher->M: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", p_C3[i]);
@@ -516,7 +515,7 @@ int SM2Client::sm2_decrypt(
 
     if (0 != memcmp(p_C3, mac, NUM_ECC_DIGITS))
     {
-        MES_ERROR << " hash error \n";
+        MES_ERROR(" hash error \n");
         return 0;
     }
 
@@ -600,16 +599,16 @@ int SM2Client::Connect(const string &ip, int port)
     server.sin_port = htons(port);
     if (connect(mSocket, (SOCKADDR *)&server, sizeof(server)) == SOCKET_ERROR)
     {
-        MES_ERROR << "cannot connect to the server,please check the ip and port correctly\n";
+        MES_ERROR("cannot connect to the server,please check the ip and port correctly\n");
         return 0;
     }
-    MES_ERROR << "successfully connecting with the server\n";
+    MES_ERROR("successfully connecting with the server\n");
     return 1;
 }
 
 int SM2Client::Send(vector<EccPoint> &points,int signal)
 {
-    MES_INFO << "sending data to the server..\n";
+    MES_INFO("sending data to the server..\n");
     //数据预处理(从EccPoint类型转换为char*类型)
     //同时设计一个首部记录数据的长度
     //中途会涉及到字符串拼接的操作
@@ -635,7 +634,7 @@ int SM2Client::Send(vector<EccPoint> &points,int signal)
     }
 
 #ifdef __SM2_DEBUG__
-    MES_INFO << "the sending data is: " << buffer << endl;
+    MES_INFO("the sending data is: %s\n",buffer);
 
     //数据传输
     const char *mess = buffer.c_str();
@@ -644,13 +643,13 @@ int SM2Client::Send(vector<EccPoint> &points,int signal)
     {
         if (mSocket == INVALID_SOCKET)
         {
-            MES_ERROR << "the client socket is invalid\n";
+            MES_ERROR("the client socket is invalid\n");
         }
-        MES_ERROR << "can not send the message, please check the sockAddr\n";
+        MES_ERROR("can not send the message, please check the sockAddr\n");
         return 0;
     }
 
-    MES_INFO << "successfully sending data to Server\n";
+    MES_INFO("successfully sending data to Server\n");
 
     //释放内存
     delete mess;
@@ -675,12 +674,12 @@ vector<EccPoint> SM2Client::Recv()
     //1.1 利用接收函数检测连接的有效性
     if (ret <= 0 && errno != EINTR)
     {
-        MES_ERROR << "the connection has closed,shut down the calculating\n";
+        MES_ERROR("the connection has closed,shut down the calculating\n");
         return 0;
     }
 
     data[ret] = '\0'; //如果能够接收，则recv()返回的是数据的长度
-    MES_INFO << "receive the data from server,transforming data..\n";
+    MES_INFO("receive the data from server,transforming data..\n");
 
     //2、数据处理(从char[65535]中提取数据并转换为EccPoint类型)
     //数据的结构: 首部+数据
@@ -701,8 +700,7 @@ vector<EccPoint> SM2Client::Recv()
         memcpy(tempData, &data[i * NUM_ECC_DIGITS * 4 + 1], NUM_ECC_DIGITS * 2);
 
 #ifdef __SM2_DEBUG__
-        MES_INFO << "the No." << i + 1 << "receiving data1: "
-                 << tempData << endl;
+        MES_INFO("the No.%d receiving data1: %s\n",i+1,tempData);
 #endif //__SM2_DEBUG__
 
         data_convrt = reinterpret_cast<uint8_t *>(tempData);
@@ -712,8 +710,7 @@ vector<EccPoint> SM2Client::Recv()
         memcpy(tempData, &data[i * NUM_ECC_DIGITS * 4 + 1 + NUM_ECC_DIGITS * 2], NUM_ECC_DIGITS * 2);
 
 #ifdef __SM2_DEBUG__
-        MES_INFO << "the No." << i + 1 << "receiving data2: "
-                 << tempData << endl;
+        MES_INFO("the No.%d receiving data2: %s\n",i+1,tempData);
 #endif //__SM2_DEBUG__
 
         data_convrt = reinterpret_cast<uint8_t*>(tempData);
@@ -722,7 +719,7 @@ vector<EccPoint> SM2Client::Recv()
         points.push_back(point);
     }
 
-    MES_INFO << "successfully transforming data..\n";
+    MES_INFO("successfully transforming data..\n");
     return points;
 }
 

@@ -8,8 +8,9 @@
 #include"common.h"
 #include"ecc.h"
 #include"vli_compute.h"
-#include"sm2Client.h"
-#include"sm2Server.h"
+#include"sm3.h"
+// #include"sm2Client.h"
+// #include"sm2Server.h"
 
 /*
     define to enable SM2 debug function
@@ -34,5 +35,14 @@
     #define ECC_ASM ec_asm_none
 #endif //ECC_ASM
 
+
+/*
+*   Create the random string between [1,n-1]
+*   @param randStr the random string in 'uint8_t*' type that created
+ */
+void makeRandom(uint8_t*& randStr);
+
+//since the string is defined in C++,
+//we should make sure the environment it will be defined
 
 #endif //HEAEDER_SM2_H
