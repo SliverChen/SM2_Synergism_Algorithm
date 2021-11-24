@@ -21,14 +21,6 @@
 
 #define __SM2_TEST_DEBUG__ 1
 
-/*
-    Optimization settings:
-    If enabled, this will cause a specific function 
-    to be used multiplication function.
-    Improves speed by about 8%
-*/
-#define __ECC_SQUARE_FUNC 1
-
 
 /*
     Inline assembly options

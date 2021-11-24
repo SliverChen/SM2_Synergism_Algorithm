@@ -11,6 +11,14 @@
 
 #include"common.h"
 
+/*
+    Optimization settings:
+    If enabled, this will cause a specific function 
+    to be used multiplication function.
+    Improves speed by about 8%
+*/
+#define ECC_SQUARE_FUNC 1
+
 
 //the following function has defined in C++ environment
 

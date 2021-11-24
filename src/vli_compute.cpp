@@ -57,8 +57,12 @@ extern "C"
     {
         unsigned int i;
         for (i = 0; i < NUM_ECC_DIGITS; ++i)
+        {
             if (p_vli[i])
+            {
                 return 0;
+            }
+        }
         return 1;
     }
 
@@ -70,9 +74,12 @@ extern "C"
     unsigned int vli_numDigits(uint8_t *p_vli)
     {
         int i;
+        /* Search from the end until we find a non-zero digit.
+       We do it in reverse because we expect that most digits will be nonzero. */
         for (i = NUM_ECC_DIGITS - 1; i >= 0 && p_vli[i] == 0; --i)
         {
         }
+
         return (i + 1);
     }
 
@@ -80,22 +87,29 @@ extern "C"
     {
         unsigned int i;
         uint8_t l_digit;
+
         unsigned int l_numDigits = vli_numDigits(p_vli);
         if (l_numDigits == 0)
+        {
             return 0;
+        }
 
         l_digit = p_vli[l_numDigits - 1];
         for (i = 0; l_digit; ++i)
+        {
             l_digit >>= 1;
+        }
 
         return ((l_numDigits - 1) * 8 + i);
     }
 
-    void vli_set(uint8_t *p_src, uint8_t *p_dst)
+    void vli_set(uint8_t *p_dest, uint8_t *p_src)
     {
         unsigned int i;
         for (i = 0; i < NUM_ECC_DIGITS; ++i)
-            p_dst[i] = p_src[i];
+        {
+            p_dest[i] = p_src[i];
+        }
     }
 
     int vli_cmp(uint8_t *p_left, uint8_t *p_right)
@@ -104,9 +118,13 @@ extern "C"
         for (i = NUM_ECC_DIGITS - 1; i >= 0; --i)
         {
             if (p_left[i] > p_right[i])
+            {
                 return 1;
+            }
             else if (p_left[i] < p_right[i])
+            {
                 return -1;
+            }
         }
         return 0;
     }

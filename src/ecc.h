@@ -31,7 +31,7 @@ extern "C"{
     @param p_bytes the converted integer with the standard octet representation
     @param p_native the native integer value after converting
 */
-void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4],uint8_t P_native[NUM_ECC_DIGITS]);
+void ecc_bytes2native(uint8_t p_native[NUM_ECC_DIGITS], uint8_t p_bytes[NUM_ECC_DIGITS * 4]);
 
 
 /*
@@ -39,7 +39,7 @@ void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4],uint8_t P_native[NUM_E
     @param p_native the native integer value to be converted
     @param p_bytes  an integer in standard octet representation after converting
 */
-void ecc_native2bytes(uint8_t p_native[NUM_ECC_DIGITS],uint8_t p_bytes[NUM_ECC_DIGITS*4]);
+void ecc_native2bytes(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t p_native[NUM_ECC_DIGITS]);
 
 
 /* ecc point operations */

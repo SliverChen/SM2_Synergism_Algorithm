@@ -50,21 +50,21 @@ extern "C"
 {
 #endif //__cplusplus
 
-	void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t p_native[NUM_ECC_DIGITS])
+	void ecc_bytes2native(uint8_t p_native[NUM_ECC_DIGITS], uint8_t p_bytes[NUM_ECC_DIGITS * 4])
 	{
-		unsigned int i;
-		for (i = 0; i < NUM_ECC_DIGITS; ++i)
-		{
-			p_bytes[NUM_ECC_DIGITS - i - 1] = p_native[i];
-		}
-	}
-
-	void ecc_native2bytes(uint8_t p_native[NUM_ECC_DIGITS], uint8_t p_bytes[NUM_ECC_DIGITS * 4])
-	{
-		unsigned int i;
+		unsigned i;
 		for (i = 0; i < NUM_ECC_DIGITS; ++i)
 		{
 			p_native[i] = p_bytes[NUM_ECC_DIGITS - i - 1];
+		}
+	}
+
+	void ecc_native2bytes(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t p_native[NUM_ECC_DIGITS])
+	{
+		unsigned i;
+		for (i = 0; i < NUM_ECC_DIGITS; ++i)
+		{
+			p_bytes[NUM_ECC_DIGITS - i - 1] = p_native[i];
 		}
 	}
 
@@ -87,7 +87,7 @@ extern "C"
 		/* Make sure that y^2 == x^3 + ax + b */
 		if (vli_cmp(y, x) != 0)
 		{
-			MES_ERROR("there is a point that is not on curve: y^2 == x^3 + ax + b\n");
+			//MES_ERROR("there is a point that is not on curve: y^2 == x^3 + ax + b\n");
 			return 0;
 		}
 
@@ -297,7 +297,7 @@ extern "C"
 					 uint8_t p_random[NUM_ECC_DIGITS])
 	{
 		/* Make sure the private key is in the range [1, n-1].
-	   For the supported curves, n is always large enough that we only need to subtract once at most. */
+       For the supported curves, n is always large enough that we only need to subtract once at most. */
 		vli_set(p_privateKey, p_random);
 		if (vli_cmp(curve_n, p_privateKey) != 1)
 		{
