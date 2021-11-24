@@ -18,6 +18,9 @@
 */
 #define __SM2_DEBUG__
 
+
+#define __SM2_TEST_DEBUG__ 1
+
 /*
     Optimization settings:
     If enabled, this will cause a specific function 

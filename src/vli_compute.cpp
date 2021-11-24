@@ -1,26 +1,25 @@
 #include "ecc_param.h"
 #include "vli_compute.h"
 
-void tostr(const uint8_t *source,string& result,int len)
+void tostr(const uint8_t *source, string &result, int len)
+{
+    int i;
+
+    //这里开辟len*2主要是让sprintf_s开辟足够的缓存空间
+    //让一整串字符都实现格式匹配(sprintf_s的第二个参数设置缓存大小)
+    char *ch = new char[len * 2];
+    for (i = 0; i < len; ++i)
     {
-        int i;
+        //采用格式串的方式获取hex的字符串形式
+        sprintf_s(ch, len * 2, "%02X", source[i]);
 
-        //这里开辟len*2主要是让sprintf_s开辟足够的缓存空间
-        //让一整串字符都实现格式匹配(sprintf_s的第二个参数设置缓存大小)
-        char* ch = new char[len*2];
-        for(i = 0;i<len;++i)
-        {
-            //采用格式串的方式获取hex的字符串形式
-            sprintf_s(ch,len*2,"%02X",source[i]);
-
-            //这里说明了用string的原因
-            //char*的拼接不安全
-            //char*拼接属于未知长度的char字符串的处理
-            result.append(ch);
-        }
-        FREEARRAY(ch);
+        //这里说明了用string的原因
+        //char*的拼接不安全
+        //char*拼接属于未知长度的char字符串的处理
+        result.append(ch);
     }
-
+    FREEARRAY(ch);
+}
 
 #ifdef __cplusplus
 extern "C"
@@ -70,9 +69,10 @@ extern "C"
 
     unsigned int vli_numDigits(uint8_t *p_vli)
     {
-        int i = NUM_ECC_DIGITS - 1;
-        while (i >= 0 && p_vli[i] == 0)
-            --i;
+        int i;
+        for (i = NUM_ECC_DIGITS - 1; i >= 0 && p_vli[i] == 0; --i)
+        {
+        }
         return (i + 1);
     }
 
@@ -148,10 +148,11 @@ extern "C"
             if (l_sum != p_left[i])
             {
                 l_carry = (l_sum < p_left[i]);
+                //l_carry = (l_sum < p_left[i]) | ((l_sum == p_left[i]) && (l_carry));
             }
             p_result[i] = l_sum;
-            return l_carry;
         }
+        return l_carry;
     }
 
     uint8_t vli_sub(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
@@ -162,7 +163,9 @@ extern "C"
         {
             uint8_t l_diff = p_left[i] - p_right[i] - l_borrow;
             if (l_diff != p_left[i])
+            {
                 l_borrow = (l_diff > p_left[i]);
+            }
             p_result[i] = l_diff;
         }
         return l_borrow;
@@ -175,7 +178,8 @@ extern "C"
 
         unsigned int i, k;
 
-        for (k = 0; k < NUM_ECC_DIGITS - 1; ++k)
+        /* Compute each digit of p_result in sequence, maintaining the carries. */
+        for (k = 0; k < NUM_ECC_DIGITS * 2 - 1; ++k)
         {
             unsigned int l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
             for (i = l_min; i <= k && i < NUM_ECC_DIGITS; ++i)
@@ -189,7 +193,7 @@ extern "C"
             r2 = 0;
         }
 
-        p_result[NUM_ECC_DIGITS * 2 - 1] = (uint16_t)r01;
+        p_result[NUM_ECC_DIGITS * 2 - 1] = (uint8_t)r01;
     }
 
     void vli_modAdd(
@@ -197,7 +201,7 @@ extern "C"
     {
         uint8_t l_carry = vli_add(p_result, p_left, p_right);
         if (l_carry || vli_cmp(p_result, p_mod) >= 0)
-        {
+        { /* p_result > p_mod (p_result = p_mod + remainder), so subtract p_mod to get remainder. */
             vli_sub(p_result, p_result, p_mod);
         }
     }
@@ -207,7 +211,8 @@ extern "C"
     {
         uint8_t l_borrow = vli_sub(p_result, p_left, p_right);
         if (l_borrow)
-        {
+        { /* In this case, p_result == -diff == (max int) - diff.
+         Since -x % d == d - x, we can get the correct result from p_result + p_mod (with overflow). */
             vli_add(p_result, p_result, p_mod);
         }
     }
@@ -297,7 +302,7 @@ extern "C"
         vli_clear(l_tmp2);
         vli_clear(l_tmp3);
 
-        //calculate Y0
+        /* Y0 */
         l_tmp1[0] = l_tmp1[12] = l_tmp1[28] = p_product[32];
         l_tmp1[1] = l_tmp1[13] = l_tmp1[29] = p_product[33];
         l_tmp1[2] = l_tmp1[14] = l_tmp1[30] = p_product[34];
@@ -309,7 +314,7 @@ extern "C"
         l_carry += vli_add(p_result, p_result, l_tmp1);
         l_carry -= vli_sub(p_result, p_result, l_tmp2);
 
-        //calculate Y1
+        /* Y1 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[16] = l_tmp1[28] = p_product[36];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[17] = l_tmp1[29] = p_product[37];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[18] = l_tmp1[30] = p_product[38];
@@ -322,7 +327,7 @@ extern "C"
         l_carry += vli_add(p_result, p_result, l_tmp1);
         l_carry -= vli_sub(p_result, p_result, l_tmp2);
 
-        //calculate Y2
+        /* Y2 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[20] = l_tmp1[28] = p_product[40];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[21] = l_tmp1[29] = p_product[41];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[22] = l_tmp1[30] = p_product[42];
@@ -330,7 +335,7 @@ extern "C"
         l_tmp1[16] = l_tmp1[17] = l_tmp1[18] = l_tmp1[19] = 0;
         l_carry += vli_add(p_result, p_result, l_tmp1);
 
-        //calculate Y3
+        /* Y3 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[24] = l_tmp1[28] = p_product[44];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[25] = l_tmp1[29] = p_product[45];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[26] = l_tmp1[30] = p_product[46];
@@ -338,7 +343,7 @@ extern "C"
         l_tmp1[20] = l_tmp1[21] = l_tmp1[22] = l_tmp1[23] = 0;
         l_carry += vli_add(p_result, p_result, l_tmp1);
 
-        //calculate Y4
+        /* Y4 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[16] = l_tmp1[28] = l_tmp3[28] = p_product[48];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[17] = l_tmp1[29] = l_tmp3[29] = p_product[49];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[18] = l_tmp1[30] = l_tmp3[30] = p_product[50];
@@ -347,7 +352,7 @@ extern "C"
         l_carry += vli_add(p_result, p_result, l_tmp1);
         l_carry += vli_add(p_result, p_result, l_tmp3);
 
-        //calculate Y5
+        /* Y5 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[16] = l_tmp1[20] = l_tmp1[28] = p_product[52];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[17] = l_tmp1[21] = l_tmp1[29] = p_product[53];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[18] = l_tmp1[22] = l_tmp1[30] = p_product[54];
@@ -364,7 +369,7 @@ extern "C"
         l_carry += vli_add(p_result, p_result, l_tmp3);
         l_carry -= vli_sub(p_result, p_result, l_tmp2);
 
-        //calculate Y6
+        /* Y6 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[16] = l_tmp1[20] = l_tmp1[24] = l_tmp1[28] = p_product[56];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[17] = l_tmp1[21] = l_tmp1[25] = l_tmp1[29] = p_product[57];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[18] = l_tmp1[22] = l_tmp1[26] = l_tmp1[30] = p_product[58];
@@ -382,7 +387,7 @@ extern "C"
         l_carry += vli_add(p_result, p_result, l_tmp3);
         l_carry -= vli_sub(p_result, p_result, l_tmp2);
 
-        //calculate Y7
+        /* Y7 */
         l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[16] = l_tmp1[20] = l_tmp1[24] = l_tmp1[28] = p_product[60];
         l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[17] = l_tmp1[21] = l_tmp1[25] = l_tmp1[29] = p_product[61];
         l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[18] = l_tmp1[22] = l_tmp1[26] = l_tmp1[30] = p_product[62];
@@ -437,7 +442,9 @@ extern "C"
             {
                 vli_rshift1(a);
                 if (!EVEN(u))
+                {
                     l_carry = vli_add(u, u, p_mod);
+                }
                 vli_rshift1(u);
                 if (l_carry)
                 {
@@ -448,20 +455,28 @@ extern "C"
             {
                 vli_rshift1(b);
                 if (!EVEN(v))
+                {
                     l_carry = vli_add(v, v, p_mod);
+                }
                 vli_rshift1(v);
                 if (l_carry)
+                {
                     v[NUM_ECC_DIGITS - 1] |= 0x80;
+                }
             }
             else if (l_cmpResult > 0)
             {
                 vli_sub(a, a, b);
                 vli_rshift1(a);
                 if (vli_cmp(u, v) < 0)
+                {
                     vli_add(u, u, p_mod);
+                }
                 vli_sub(u, u, v);
                 if (!EVEN(u))
+                {
                     l_carry = vli_add(u, u, p_mod);
+                }
                 vli_rshift1(u);
                 if (l_carry)
                 {
@@ -488,6 +503,7 @@ extern "C"
                 }
             }
         }
+
         vli_set(p_result, u);
     }
 
