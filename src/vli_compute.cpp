@@ -1,5 +1,26 @@
-#include "vli_compute.h"
 #include "ecc_param.h"
+#include "vli_compute.h"
+
+void tostr(const uint8_t *source,string& result,int len)
+    {
+        int i;
+
+        //这里开辟len*2主要是让sprintf_s开辟足够的缓存空间
+        //让一整串字符都实现格式匹配(sprintf_s的第二个参数设置缓存大小)
+        char* ch = new char[len*2];
+        for(i = 0;i<len;++i)
+        {
+            //采用格式串的方式获取hex的字符串形式
+            sprintf_s(ch,len*2,"%02X",source[i]);
+
+            //这里说明了用string的原因
+            //char*的拼接不安全
+            //char*拼接属于未知长度的char字符串的处理
+            result.append(ch);
+        }
+        FREEARRAY(ch);
+    }
+
 
 #ifdef __cplusplus
 extern "C"
@@ -26,34 +47,14 @@ extern "C"
         }
     }
 
-    void tostr(const uint8_t *source,string& result,int len)
-    {
-        int i;
-
-        //这里开辟len*2主要是让sprintf_s开辟足够的缓存空间
-        //让一整串字符都实现格式匹配(sprintf_s的第二个参数设置缓存大小)
-        char* ch = new char[len*2];
-        for(i = 0;i<len;++i)
-        {
-            //采用格式串的方式获取hex的字符串形式
-            sprintf_s(ch,len*2,"%02X",source[i]);
-
-            //这里说明了用string的原因
-            //char*的拼接不安全
-            //char*拼接属于未知长度的char字符串的处理
-            result.append(ch);
-        }
-        FREE(ch);
-    }
-
-    static void vli_clear(uint8_t *p_vli)
+    void vli_clear(uint8_t *p_vli)
     {
         unsigned int i;
         for (i = 0; i < NUM_ECC_DIGITS; ++i)
             p_vli[i] = 0;
     }
 
-    static int vli_isZero(uint8_t *p_vli)
+    int vli_isZero(uint8_t *p_vli)
     {
         unsigned int i;
         for (i = 0; i < NUM_ECC_DIGITS; ++i)
@@ -62,12 +63,12 @@ extern "C"
         return 1;
     }
 
-    static uint8_t vli_testBit(uint8_t *p_vli, unsigned int p_bit)
+    uint8_t vli_testBit(uint8_t *p_vli, unsigned int p_bit)
     {
         return (p_vli[p_bit / 8] & (1 << (p_bit % 8)));
     }
 
-    static unsigned int vli_numDigits(uint8_t *p_vli)
+    unsigned int vli_numDigits(uint8_t *p_vli)
     {
         int i = NUM_ECC_DIGITS - 1;
         while (i >= 0 && p_vli[i] == 0)
@@ -75,7 +76,7 @@ extern "C"
         return (i + 1);
     }
 
-    static unsigned int vli_numBits(uint8_t *p_vli)
+    unsigned int vli_numBits(uint8_t *p_vli)
     {
         unsigned int i;
         uint8_t l_digit;
@@ -90,14 +91,14 @@ extern "C"
         return ((l_numDigits - 1) * 8 + i);
     }
 
-    static void vli_set(uint8_t *p_src, uint8_t *p_dst)
+    void vli_set(uint8_t *p_src, uint8_t *p_dst)
     {
         unsigned int i;
         for (i = 0; i < NUM_ECC_DIGITS; ++i)
             p_dst[i] = p_src[i];
     }
 
-    static int vli_cmp(uint8_t *p_left, uint8_t *p_right)
+    int vli_cmp(uint8_t *p_left, uint8_t *p_right)
     {
         int i;
         for (i = NUM_ECC_DIGITS - 1; i >= 0; --i)
@@ -110,7 +111,7 @@ extern "C"
         return 0;
     }
 
-    static uint8_t vli_lshift(uint8_t *p_result, uint8_t *p_src, unsigned int p_shift)
+    uint8_t vli_lshift(uint8_t *p_result, uint8_t *p_src, unsigned int p_shift)
     {
         uint8_t l_carry = 0;
         unsigned int i;
@@ -123,7 +124,7 @@ extern "C"
         return l_carry;
     }
 
-    static void vli_rshift(uint8_t *p_vli)
+    void vli_rshift1(uint8_t *p_vli)
     {
         uint8_t *l_end = p_vli;
         uint8_t l_carry = 0;
@@ -137,7 +138,7 @@ extern "C"
         }
     }
 
-    static uint8_t vli_add(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
+    uint8_t vli_add(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
     {
         uint8_t l_carry = 0;
         unsigned int i;
@@ -153,7 +154,7 @@ extern "C"
         }
     }
 
-    static uint8_t vli_sub(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
+    uint8_t vli_sub(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
     {
         uint8_t l_borrow = 0;
         unsigned int i;
@@ -167,7 +168,7 @@ extern "C"
         return l_borrow;
     }
 
-    static void vli_mult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
+    void vli_mult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
     {
         uint16_t r01 = 0;
         uint8_t r2 = 0;
@@ -191,7 +192,7 @@ extern "C"
         p_result[NUM_ECC_DIGITS * 2 - 1] = (uint16_t)r01;
     }
 
-    static void vli_modAdd(
+    void vli_modAdd(
         uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
     {
         uint8_t l_carry = vli_add(p_result, p_left, p_right);
@@ -201,7 +202,7 @@ extern "C"
         }
     }
 
-    static void vli_modSub(
+    void vli_modSub(
         uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
     {
         uint8_t l_borrow = vli_sub(p_result, p_left, p_right);
@@ -211,7 +212,7 @@ extern "C"
         }
     }
 
-    static void vli_modMult(
+    void vli_modMult(
         uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
     {
         uint8_t l_product[2 * NUM_ECC_DIGITS];
@@ -276,15 +277,15 @@ extern "C"
         vli_set(p_result, l_product);
     }
 
-    static void vli_modMult_fast(
-        uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
+    void vli_modMult_fast(
+        uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
     {
         uint8_t l_product[2 * NUM_ECC_DIGITS];
         vli_mult(l_product, p_left, p_right);
         vli_mmod_fast(p_result, l_product);
     }
 
-    static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
+    void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
     {
         uint8_t l_tmp1[NUM_ECC_DIGITS];
         uint8_t l_tmp2[NUM_ECC_DIGITS];
@@ -417,7 +418,7 @@ extern "C"
         }
     }
 
-    static void vli_modInv(uint8_t *p_result, uint8_t *p_input, uint8_t *p_mod)
+    void vli_modInv(uint8_t *p_result, uint8_t *p_input, uint8_t *p_mod)
     {
         uint8_t a[NUM_ECC_DIGITS], b[NUM_ECC_DIGITS], u[NUM_ECC_DIGITS], v[NUM_ECC_DIGITS];
         uint8_t l_carry;
@@ -434,10 +435,10 @@ extern "C"
             l_carry = 0;
             if (EVEN(a))
             {
-                vli_rshift(a);
+                vli_rshift1(a);
                 if (!EVEN(u))
                     l_carry = vli_add(u, u, p_mod);
-                vli_rshift(u);
+                vli_rshift1(u);
                 if (l_carry)
                 {
                     u[NUM_ECC_DIGITS - 1] |= 0x80;
@@ -445,23 +446,23 @@ extern "C"
             }
             else if (EVEN(b))
             {
-                vli_rshift(b);
+                vli_rshift1(b);
                 if (!EVEN(v))
                     l_carry = vli_add(v, v, p_mod);
-                vli_rshift(v);
+                vli_rshift1(v);
                 if (l_carry)
                     v[NUM_ECC_DIGITS - 1] |= 0x80;
             }
             else if (l_cmpResult > 0)
             {
                 vli_sub(a, a, b);
-                vli_rshift(a);
+                vli_rshift1(a);
                 if (vli_cmp(u, v) < 0)
                     vli_add(u, u, p_mod);
                 vli_sub(u, u, v);
                 if (!EVEN(u))
                     l_carry = vli_add(u, u, p_mod);
-                vli_rshift(u);
+                vli_rshift1(u);
                 if (l_carry)
                 {
                     u[NUM_ECC_DIGITS - 1] |= 0x80;
@@ -470,7 +471,7 @@ extern "C"
             else
             {
                 vli_sub(b, b, a);
-                vli_rshift(b);
+                vli_rshift1(b);
                 if (vli_cmp(v, u) < 0)
                 {
                     vli_add(v, v, p_mod);
@@ -480,7 +481,7 @@ extern "C"
                 {
                     l_carry = vli_add(v, v, p_mod);
                 }
-                vli_rshift(v);
+                vli_rshift1(v);
                 if (l_carry)
                 {
                     v[NUM_ECC_DIGITS - 1] |= 0x80;
@@ -492,7 +493,7 @@ extern "C"
 
 #ifdef ECC_SQUARE_FUNC
 
-    static void vli_square(uint8_t *p_result, uint8_t *p_left)
+    void vli_square(uint8_t *p_result, uint8_t *p_left)
     {
         uint16_t r01 = 0;
         uint8_t r2 = 0;
@@ -520,7 +521,7 @@ extern "C"
         p_result[NUM_ECC_DIGITS * 2 - 1] = (uint8_t)r01;
     }
 
-    static void vli_modSquare_fast(uint8_t *p_result, uint8_t *p_left)
+    void vli_modSquare_fast(uint8_t *p_result, uint8_t *p_left)
     {
         uint8_t l_product[2 * NUM_ECC_DIGITS];
         vli_square(l_product, p_left);

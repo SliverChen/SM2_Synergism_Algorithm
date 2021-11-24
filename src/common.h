@@ -1,13 +1,10 @@
+/*
+*   公共部分(每个头文件都会包含)
+*/
+
 #ifndef HEADER_COMMON_H
 #define HEADER_COMMON_H
 #pragma once
-
-//基础数学库
-#include<math.h>
-
-//字符串标准库
-#include<string>
-#include<string.h>
 
 //标准化输出
 #include<Windows.h>
@@ -15,18 +12,20 @@
 #include<stdio.h>
 #include<iomanip>
 
-//随机数生成
+//随机数生成(这个只需要出现在新的C++代码中)
 #include<openssl/bn.h>
-
-#pragma comment(lib,"ws2_32.lib")
 #pragma comment(lib, "libapps.lib")
 #pragma comment(lib, "libcrypto.lib")
 #pragma comment(lib, "libssl.lib")
 #pragma comment(lib, "libssl_static.lib")
 #pragma comment(lib, "openssl.lib")
 
+//字符串的处理
+#include<cstring>
+using std::string;
 
-SYSTEMTIME systemTime;
+//规范化调试语句
+static SYSTEMTIME systemTime;
 #define MES_INFO(...) GetLocalTime(&systemTime); \
     printf("[%02d:%02d:%02d Info]:",systemTime.wHour,\
         systemTime.wMinute,systemTime.wSecond); \
@@ -44,9 +43,9 @@ SYSTEMTIME systemTime;
 //SM2的数据长度
 #define NUM_ECC_DIGITS 32
 
-//函数是否成功调用的标识符
-#define SUCCESS 1
-#define BAD 0
+//内存清理
+#define FREE(X) delete X;X=nullptr;
+#define FREEARRAY(X) delete[] X;X=nullptr;
 
 
 #endif //HEADER_COMMON_H

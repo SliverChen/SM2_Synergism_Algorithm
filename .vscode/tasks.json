@@ -2,19 +2,19 @@
     "tasks": [
         {
             "type": "cppbuild",
-            "label": "C/C++: gcc.exe 生成活动文件",
-            "command": "E:\\Studies\\Tools\\MinGW_v8.1\\mingw64\\bin\\gcc.exe",
+            "label": "g++.exe build active file",
+            "command": "E:\\Studies\\Tools\\MinGW_v8.1\\mingw64\\bin\\g++.exe",
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
                 "${file}",
-                "-I'${workspaceFolder}/3rdParty/include'",
-                "-L'${workspaceFolder}/3rdParty/lib'",
+                "-I'${workspaceFolder}\\3rdParty\\include\\openssl'",
+                "-L'${workspaceFolder}\\3rdParty\\lib'",
                 "-o",
                 "${fileDirname}\\${fileBasenameNoExtension}.exe"
             ],
             "options": {
-                "cwd": "${fileDirname}"
+                "cwd": "E:\\Studies\\Tools\\MinGW_v8.1\\mingw64\\bin"
             },
             "problemMatcher": [
                 "$gcc"

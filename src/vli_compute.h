@@ -11,6 +11,19 @@
 
 #include"common.h"
 
+
+//the following function has defined in C++ environment
+
+/*
+    make the representation of hex into string type
+    @brief source the representation of hex before converting
+    @brief result the string after converting
+    @param len the length of the representation of hex
+*/
+void tostr(const uint8_t* source,string& result,int len);
+
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif //__cplusplus
@@ -27,18 +40,10 @@ extern "C" {
 void tohex(const uint8_t* source,uint8_t* result,int len);
 
 /*
-    make the representation of hex into string type
-    @brief source the representation of hex before converting
-    @brief result the string after converting
-    @param len the length of the representation of hex
-*/
-void tostr(const uint8_t* source,string& result,int len);
-
-/*
     clear the value
     @param p_vli the value that will be cleared
 */
-static void vli_clear(uint8_t* p_vli);
+void vli_clear(uint8_t* p_vli);
 
 
 /*
@@ -46,7 +51,7 @@ static void vli_clear(uint8_t* p_vli);
     @param p_vli the value that will be checked
     @return 1 if the value is zero, 0 otherwise.
 */
-static int vli_isZero(uint8_t* p_vli);
+int vli_isZero(uint8_t* p_vli);
 
 
 /*
@@ -54,7 +59,7 @@ static int vli_isZero(uint8_t* p_vli);
     @param p_vli the value that will be checked
     @return nonzero if bit p_bit of p_vli is set.
 */
-static uint8_t vli_testBit(uint8_t *p_vli,unsigned int p_bit);
+uint8_t vli_testBit(uint8_t *p_vli,unsigned int p_bit);
 
 
 /*
@@ -62,13 +67,13 @@ static uint8_t vli_testBit(uint8_t *p_vli,unsigned int p_bit);
     @param p_vli the value that will be counted
     @return the number of 8-bit digits in p_vli
 */
-static unsigned int vli_numDigits(uint8_t* p_vli);
+unsigned int vli_numDigits(uint8_t* p_vli);
 
 
 /*
     counts the number of bits required for p_vli
 */
-static unsigned int vli_numBits(uint8_t* p_vli);
+unsigned int vli_numBits(uint8_t* p_vli);
 
 
 /*
@@ -76,7 +81,7 @@ static unsigned int vli_numBits(uint8_t* p_vli);
     @param p_src the integer that will be refered
     @param p_dst the integer that will be set
 */
-static void vli_set(uint8_t* p_src,uint8_t* p_dst);
+void vli_set(uint8_t* p_src,uint8_t* p_dst);
 
 
 /*
@@ -85,7 +90,7 @@ static void vli_set(uint8_t* p_src,uint8_t* p_dst);
     @param p_right the other value
     @return 1 if p_left>p_right, 0 if p_left==p_right, -1 if p_left < p_right
 */
-static int vli_cmp(uint8_t* p_left,uint8_t* p_right);
+int vli_cmp(uint8_t* p_left,uint8_t* p_right);
 
 /*
     computes value << c
@@ -93,33 +98,30 @@ static int vli_cmp(uint8_t* p_left,uint8_t* p_right);
     @param p_src the value that will be computed
     @param p_shift the number of bits shifted left
 */
-static uint8_t vli_lshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_shift);
+uint8_t vli_lshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_shift);
 
 /*
     computes value >> c
-    @param p_result the value after computing
-    @param p_src the value that will be computed
-    @param p_shift the number of bits shifted right
 */
-static void vli_rshift(uint8_t* p_result,uint8_t* p_src,unsigned int p_right);
+void vli_rshift1(uint8_t* p_vli);
 
 
 /*
     computes adding
 */
-static uint8_t vli_add(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+uint8_t vli_add(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
 
 
 /*
     computes minus
 */
-static uint8_t vli_sub(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+uint8_t vli_sub(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
 
 
 /*
     computes multiply
 */
-static void vli_mult(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
+void vli_mult(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
 
 
 /*
@@ -129,7 +131,7 @@ static void vli_mult(uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
     @param p_right the other value to be added
     @param p_mod the mod of the defined ecc
 */
-static void vli_modAdd(
+void vli_modAdd(
     uint8_t* p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
 
 
@@ -140,7 +142,7 @@ static void vli_modAdd(
     @param p_right the right value to be minus
     @param p_mod the mod of the defined ecc
 */
-static void vli_modSub(
+void vli_modSub(
     uint8_t* p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
 
 
@@ -151,7 +153,7 @@ static void vli_modSub(
     @param p_right the other value to be multiplied
     @param p_mod the mod of the defined ecc
 */
-static void vli_modMult(
+void vli_modMult(
     uint8_t *p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
 
 
@@ -159,8 +161,8 @@ static void vli_modMult(
     multiply in mod with faster way
     using p_result = (p_left * p_right) % curve_p
 */
-static void vli_modMult_fast(
-    uint8_t* p_result,uint8_t* p_left,uint8_t* p_right,uint8_t* p_mod);
+void vli_modMult_fast(
+    uint8_t* p_result,uint8_t* p_left,uint8_t* p_right);
 
 
 /*
@@ -168,7 +170,7 @@ static void vli_modMult_fast(
     @param p_result the value after calculating
     @param p_product the value that will be moded
 */
-static void vli_mmod_fast(uint8_t* p_result,uint8_t* p_product);
+void vli_mmod_fast(uint8_t* p_result,uint8_t* p_product);
 
 
 /*
@@ -178,19 +180,19 @@ static void vli_mmod_fast(uint8_t* p_result,uint8_t* p_product);
     @param p_input the value that will be calculated
     @param p_mod the mod of the value  
 */
-static void vli_modInv(uint8_t* p_result,uint8_t* p_input,uint8_t* p_mod);
+void vli_modInv(uint8_t* p_result,uint8_t* p_input,uint8_t* p_mod);
 
 #ifdef ECC_SQUARE_FUNC
 
 /*
     computes p_result = p_left^2;
 */
-static void vli_square(uint8_t* p_result,uint8_t* p_left);
+void vli_square(uint8_t* p_result,uint8_t* p_left);
 
 /*
     computes p_result = p_left^2 % curve_p
 */
-static void vli_modSquare_fast(uint8_t* p_result,uint8_t* p_left);
+void vli_modSquare_fast(uint8_t* p_result,uint8_t* p_left);
 
 #else //ECC_SQUARE_FUNC
 

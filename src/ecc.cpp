@@ -1,18 +1,18 @@
 #include "ecc.h"
 
-
 /* this function using C++ environment
 	that we should make sure the global environment is compatible
  */
 void makeRandom(uint8_t *&randStr)
 {
 	/* convert uint8[NUM_ECC_DIGITs] into string type */
-	string curveN_str;
-	tostr(curve_n, &curveN_str, NUM_ECC_DIGITS);
-	char *curveN = (char *)(curveN_str.c_str());
-
+	string curveN_str="";
+	tostr(curve_n, curveN_str, NUM_ECC_DIGITS);
+	char *curveN = const_cast<char*>(curveN_str.c_str());
+	
 	/* make hex into bignum type */
-	BIGNUM *cn = BN_hex2bn(curveN);
+	BIGNUM* cn = nullptr;
+	BN_hex2bn(&cn, curveN);
 
 	/* apply a cache for bignum */
 	BIGNUM *bn = BN_new();
@@ -50,7 +50,7 @@ extern "C"
 {
 #endif //__cplusplus
 
-	void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t P_native[NUM_ECC_DIGITS])
+	void ecc_bytes2native(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t p_native[NUM_ECC_DIGITS])
 	{
 		unsigned int i;
 		for (i = 0; i < NUM_ECC_DIGITS; ++i)
@@ -68,12 +68,12 @@ extern "C"
 		}
 	}
 
-	static int EccPoint_isZero(EccPoint *p_point)
+	int EccPoint_isZero(EccPoint* p_point)
 	{
 		return (vli_isZero(p_point->x) && vli_isZero(p_point->y));
 	}
 
-	static int EccPoint_is_on_curve(const EccPoint &p_point)
+	int EccPoint_is_on_curve(EccPoint C1)
 	{
 		uint8_t x[NUM_ECC_DIGITS];
 		uint8_t y[NUM_ECC_DIGITS];
@@ -87,14 +87,14 @@ extern "C"
 		/* Make sure that y^2 == x^3 + ax + b */
 		if (vli_cmp(y, x) != 0)
 		{
-			printf("not on curve: y^2 == x^3 + ax + b\n");
+			MES_ERROR("there is a point that is not on curve: y^2 == x^3 + ax + b\n");
 			return 0;
 		}
 
 		return 1;
 	}
 
-	static void EccPoint_double_jacobian(uint8_t *X1, uint8_t *Y1, uint8_t *Z1)
+	void EccPoint_double_jacobian(uint8_t* X1, uint8_t* Y1, uint8_t* Z1)
 	{
 		/* t1 = X, t2 = Y, t3 = Z */
 		uint8_t t4[NUM_ECC_DIGITS];
@@ -102,6 +102,7 @@ extern "C"
 
 		if (vli_isZero(Z1))
 		{
+			MES_ERROR("can not calculate double jacobian, for its Z1 equals 0\n");
 			return;
 		}
 
@@ -142,7 +143,7 @@ extern "C"
 		vli_set(Y1, t4);
 	}
 
-	static void apply_z(uint8_t *X1, uint8_t *Y1, uint8_t *Z1)
+	void apply_z(uint8_t* X1, uint8_t* Y1, uint8_t* Z)
 	{
 		uint8_t t1[NUM_ECC_DIGITS];
 
@@ -152,7 +153,8 @@ extern "C"
 		vli_modMult_fast(Y1, Y1, t1); /* y1 * z^3 */
 	}
 
-	static void XYcZ_initial_double(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
+	void XYcZ_initial_double(uint8_t* X1, uint8_t* Y1,
+		uint8_t* X2, uint8_t* Y2, uint8_t* p_initialZ)
 	{
 		uint8_t z[NUM_ECC_DIGITS];
 
@@ -172,7 +174,7 @@ extern "C"
 		apply_z(X2, Y2, z);
 	}
 
-	static void XYcZ_add(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
+	void XYcZ_add(uint8_t* X1, uint8_t* Y1, uint8_t* X2, uint8_t* Y2)
 	{
 		/* t1 = X1, t2 = Y1, t3 = X2, t4 = Y2 */
 		uint8_t t5[NUM_ECC_DIGITS];
@@ -202,7 +204,7 @@ extern "C"
 		vli_set(X2, t5);
 	}
 
-	static void XYcZ_addC(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
+	void XYcZ_addC(uint8_t* X1, uint8_t* Y1, uint8_t* X2, uint8_t* Y2)
 	{
 		/* t1 = X1, t2 = Y1, t3 = X2, t4 = Y2 */
 		uint8_t t5[NUM_ECC_DIGITS];
@@ -250,8 +252,8 @@ extern "C"
 		vli_set(X1, t7);
 	}
 
-	static void EccPoint_mult(EccPoint *p_result, EccPoint *p_point,
-							  uint8_t *p_scalar, uint8_t *p_initialZ)
+	void EccPoint_mult(EccPoint* p_result, EccPoint* p_point,
+		uint8_t* p_scalar, uint8_t* p_initialZ)
 	{
 		/* R0 and R1 */
 		uint8_t Rx[2][NUM_ECC_DIGITS];
@@ -292,8 +294,8 @@ extern "C"
 		vli_set(p_result->y, Ry[0]);
 	}
 
-	int ecc_make_key(EccPoint *p_publicKey, uint8_t p_privateKey[NUM_ECC_DIGITS],
-					 uint8_t p_random[NUM_ECC_DIGITS])
+	int ecc_make_key(EccPoint* p_publicKey, uint8_t p_privateKey[NUM_ECC_DIGITS],
+		uint8_t p_random[NUM_ECC_DIGITS])
 	{
 		/* Make sure the private key is in the range [1, n-1].
 	   For the supported curves, n is always large enough that we only need to subtract once at most. */
@@ -312,9 +314,9 @@ extern "C"
 		return 1;
 	}
 
-	int ecc_valid_public_key(EccPoint *p_publicKey)
+	int ecc_valid_public_key(EccPoint* p_publicKey)
 	{
-		uint8_t na[NUM_ECC_DIGITS] = {3}; /* a mod p = (-3) mod p */
+		uint8_t na[NUM_ECC_DIGITS] = { 3 }; /* a mod p = (-3) mod p */
 
 		uint8_t l_tmp1[NUM_ECC_DIGITS];
 		uint8_t l_tmp2[NUM_ECC_DIGITS];
@@ -344,8 +346,8 @@ extern "C"
 		return 1;
 	}
 
-	int ecdh_shared_secret(uint8_t p_seret[NUM_ECC_DIGITS], EccPoint *p_publicKey,
-						   uint8_t p_privateKey[NUM_ECC_DIGITS], uint8_t p_random[NUM_ECC_DIGITS])
+	int ecdh_shared_secret(uint8_t p_secret[NUM_ECC_DIGITS], EccPoint* p_publicKey,
+		uint8_t p_privateKey[NUM_ECC_DIGITS], uint8_t p_random[NUM_ECC_DIGITS])
 	{
 		EccPoint l_product;
 
@@ -359,3 +361,7 @@ extern "C"
 
 		return 1;
 	}
+
+#ifdef __cplusplus
+}
+#endif //__cplusplus

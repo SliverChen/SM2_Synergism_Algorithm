@@ -1,14 +1,15 @@
 /*
-    the header of SM2 algorithms
+*   the header of the whole SM2 algorithm
+*   including SM2Client and SM2Server
 */
 
 #ifndef HEADER_SM2_H
 #define HEADER_SM2_H
 
 #include"common.h"
-#include"ecc.h"
-#include"vli_compute.h"
 #include"sm3.h"
+#include"vli_compute.h"
+#include"ecc.h"
 // #include"sm2Client.h"
 // #include"sm2Server.h"
 
@@ -34,15 +35,5 @@
 #ifndef ECC_ASM
     #define ECC_ASM ec_asm_none
 #endif //ECC_ASM
-
-
-/*
-*   Create the random string between [1,n-1]
-*   @param randStr the random string in 'uint8_t*' type that created
- */
-void makeRandom(uint8_t*& randStr);
-
-//since the string is defined in C++,
-//we should make sure the environment it will be defined
 
 #endif //HEAEDER_SM2_H

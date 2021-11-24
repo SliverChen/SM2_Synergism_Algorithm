@@ -1,5 +1,6 @@
 /*
-    the header of ECC curve
+*   the header of the computing in ECC
+*   Progress: find the function that will use C++ grammar
 */
 
 #ifndef HEADER_ECC_H
@@ -7,9 +8,19 @@
 #pragma once
 
 #include"common.h"
-#include"vli_compute.h"
 #include"ecc_point.h"
 #include"ecc_param.h"
+#include"vli_compute.h"
+
+//the following function 'makeRandom' is defined in C++ environment
+
+/*
+*   Create the random string between [1,n-1]
+*   @param randStr the random string in 'uint8_t*' type that created
+ */
+void makeRandom(uint8_t*& randStr);
+
+
 
 #ifdef __cplusplus
 extern "C"{
@@ -38,14 +49,14 @@ void ecc_native2bytes(uint8_t p_native[NUM_ECC_DIGITS],uint8_t p_bytes[NUM_ECC_D
     @param p_point the point that will be checked
     @return 1 if p_point is at infinity,0 otherwise
 */
-static int EccPoint_isZero(EccPoint* p_point);
+int EccPoint_isZero(EccPoint* p_point);
 
 
 /*
     check if point is on curve
     @return 1 if point is on curve, 0 otherwise
 */
-static int EccPoint_is_on_curve(const EccPoint& p_point);
+int EccPoint_is_on_curve(EccPoint p_point);
 
 
 /*
@@ -54,13 +65,13 @@ static int EccPoint_is_on_curve(const EccPoint& p_point);
     @param Y1 the Y-axis component
     @param Z1 the Z-axis component
 */
-static void EccPoint_double_jacobian(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
+void EccPoint_double_jacobian(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
 
 
 /*
     Modify (x1,y1) => (x1 * z^2, y1 * z^3)
 */
-static void apply_z(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
+void apply_z(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
 
 
 /*
@@ -68,14 +79,15 @@ static void apply_z(uint8_t* X1,uint8_t* Y1,uint8_t* Z1);
     @param (X1,Y1) the point refers to P
     @param (X2,Y2) the point after calculating
 */
-static void XYcZ_initial_double(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
+void XYcZ_initial_double(uint8_t* X1,uint8_t* Y1,
+    uint8_t* X2,uint8_t* Y2,uint8_t* p_initialZ);
 
 
 /*
     calculate point1(x1,y1) add point2(x2,y2)
     the result is in the point2
 */
-static void XYcZ_add(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
+void XYcZ_add(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
 
 
 /*
@@ -91,13 +103,13 @@ static void XYcZ_add(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
     @return X2 the x-axis value after minusing
     @return Y2 the y-axis value after minusing
 */
-static void XYcZ_addC(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
+void XYcZ_addC(uint8_t* X1,uint8_t* Y1,uint8_t* X2,uint8_t* Y2);
 
 
 /*
     compute mutiply between two of the EccPoint
 */
-static void EccPoint_mult(EccPoint* p_result,EccPoint* p_point,
+void EccPoint_mult(EccPoint* p_result,EccPoint* p_point,
     uint8_t* p_scalar,uint8_t* p_initialZ);
 
 

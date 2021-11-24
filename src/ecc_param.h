@@ -1,5 +1,6 @@
 /*
-    the header of  parameters in ECC (normally defined)
+*   the header of the Ecc parameters
+*   Progress: Done
 */
 
 

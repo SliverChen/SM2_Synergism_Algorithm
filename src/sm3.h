@@ -5,6 +5,11 @@
  * author:goldboar
  * email:goldboar@163.com
  * 2011-10-26
+ * 
+ * 
+ *  this header is copied by the refered algorithm
+ *  it's no need to check for it and make it depend on C defaultly
+ *  Progress: Done
  */
 #ifndef XYSSL_SM3_H
 #define XYSSL_SM3_H

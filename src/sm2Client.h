@@ -1,3 +1,7 @@
+/*
+*   the header of SM2 Algorithm CLient
+*/
+
 #ifndef HEADER_SM2CLIENT_H
 #define HEADER_SM2CLIENT_H
 

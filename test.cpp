@@ -1,21 +1,28 @@
+/*
+    经过测试，加密的时候出现了一些问题导致后续解密的时候报错: 点不在椭圆曲线上
+    首先思考：加密的过程使用了公钥加密，在照抄的时候忘记修改一些步骤
+    现在的加密过程是照搬的参考算法上的步骤，因此需要修改(主要目标)
+*/
+
+
 #include "./src/sm2.h"
 
-//#define __SM2_TEST_DEBUG__
+#define __SM2_TEST_DEBUG__
 
 int sm2_encrypt(uint8_t* cipher_text, unsigned int* cipher_len, EccPoint* p_publicKey, uint8_t p_random[NUM_ECC_DIGITS], uint8_t* plain_text, unsigned int plain_len)
 {
     int i = 0;
     uint8_t PC = 0X04;
     uint8_t tmp = 0x00;
-    uint8_t k[NUM_ECC_DIGITS];
+    uint8_t* k = new uint8_t[NUM_ECC_DIGITS];
     EccPoint C1;
     EccPoint Pb;
     EccPoint point2;
     EccPoint point2_revert;
 
-    uint8_t x2y2[NUM_ECC_DIGITS * 2];
-    uint8_t C2[65535] = { 0 };
-    uint8_t C3[NUM_ECC_DIGITS];
+    uint8_t* x2y2 = new uint8_t[NUM_ECC_DIGITS * 2];
+    uint8_t* C2 = new uint8_t[65535];
+    uint8_t* C3 = new uint8_t[NUM_ECC_DIGITS];
     sm3_context sm3_ctx;
 
     //A1:generate random number k;
@@ -46,7 +53,7 @@ int sm2_encrypt(uint8_t* cipher_text, unsigned int* cipher_len, EccPoint* p_publ
     }
     if (EccPoint_isZero(&Pb))
     {
-        printf("S at infinity...\n");
+        MES_ERROR("S at infinity...\n");
         return 0;
     }
 
@@ -65,6 +72,7 @@ int sm2_encrypt(uint8_t* cipher_text, unsigned int* cipher_len, EccPoint* p_publ
     x9_63_kdf_sm3(x2y2, NUM_ECC_DIGITS * 2, C2, plain_len);
     if (vli_isZero(C2))
     { /* If r == 0, fail (need a different random number). */
+        MES_ERROR("the r equals zero, need a different random number\n");
         return 0;
     }
 
@@ -104,7 +112,7 @@ uint8_t p_priKey[NUM_ECC_DIGITS])
      EccPoint point2_revrt;
     uint8_t mac[NUM_ECC_DIGITS];
     uint8_t x2y2[NUM_ECC_DIGITS*2];
-    EccPoint C1,S;
+    EccPoint C1;
     uint8_t p_pvk[NUM_ECC_DIGITS];
 
     EccPoint *p_C1;
@@ -271,39 +279,41 @@ void test_sm2_encrypt_decrypt()
     tohex(d2_str, d2_key, NUM_ECC_DIGITS);
 
     //P = d1d2G-G
-    
-    // EccPoint_mult(&d1d2G, &curve_G, d2_key, NULL);
-    // EccPoint_mult(&d1d2G, &p_publicKey, d1_key, NULL);
+    EccPoint d1d2G;
+    EccPoint_mult(&d1d2G, &curve_G, d2_key, NULL);
+    EccPoint_mult(&d1d2G, &p_publicKey, d1_key, NULL);
 
-    // uint8_t x1[NUM_ECC_DIGITS];
-    // uint8_t y1[NUM_ECC_DIGITS];
-    // uint8_t x2[NUM_ECC_DIGITS];
-    // uint8_t y2[NUM_ECC_DIGITS];
+    uint8_t x1[NUM_ECC_DIGITS];
+    uint8_t y1[NUM_ECC_DIGITS];
+    uint8_t x2[NUM_ECC_DIGITS];
+    uint8_t y2[NUM_ECC_DIGITS];
 
-    // vli_set(d1d2G.x, &x1);
-    // vli_set(d1d2G.y, &y1);
-    // vli_set(curve_G.x, &x2);
-    // vli_set(curve_G.y, &y2);
+    vli_set(d1d2G.x, x1);
+    vli_set(d1d2G.y, y1);
+    vli_set(curve_G.x, x2);
+    vli_set(curve_G.y, y2);
 
-    // //调用xycz_addc计算d1d2G-G，结果在(x2,y2)
-    // XYcZ_addC(&x1, &y1, &x2, &y2);
+    //调用xycz_addc计算d1d2G-G，结果在(x2,y2)
+    XYcZ_addC(x1, y1, x2, y2);
 
-    // vli_set(x2, &p_publicKey.x);
-    // vli_set(y2, &p_publicKey.y);
+    vli_set(x2, p_publicKey.x);
+    vli_set(y2, p_publicKey.y);
 
 
-    uint8_t one[NUM_ECC_DIGITS] = {
-        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
-        0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01
-        };
-    uint8_t d1d2[NUM_ECC_DIGITS];
-    uint8_t d1d2_1[NUM_ECC_DIGITS];
-    vli_modMult(d1d2,d1_key,d2_key,curve_n);
-    vli_modSub(d1d2_1,d1d2,one,curve_n);
+    //P = (d1d2-1)G
 
-    EccPoint_mult(&p_publicKey,&curve_G,d1d2_1,NULL);
+     uint8_t one[NUM_ECC_DIGITS] = {
+         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01
+         };
+     uint8_t d1d2[NUM_ECC_DIGITS];
+     uint8_t d1d2_1[NUM_ECC_DIGITS];
+     vli_modMult(d1d2,d1_key,d2_key,curve_n);
+     vli_modSub(d1d2_1,d1d2,one,curve_n);
+
+    // EccPoint_mult(&p_publicKey,&curve_G,d1d2_1,NULL);
 
 
     //3、加密过程
@@ -322,7 +332,7 @@ void test_sm2_encrypt_decrypt()
     int ret = sm2_encrypt(encdata, &encdata_len, &p_publicKey,
                           p_random, plaintext, plain_len);
 
-    MES_INFO("sm2_encrypt result:%d\n",ret);
+    MES_INFO("sm2_encrypt result:%d,  result's len: %d\n",ret,encdata_len);
 
     MES_INFO("encrypting result: ");
     for(int i = 0;i<encdata_len;++i)

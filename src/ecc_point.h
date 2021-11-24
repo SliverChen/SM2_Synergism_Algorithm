@@ -1,10 +1,11 @@
 /*
-    the header of the point in ECC
+*   the header of the ECC Point definition
+*   Progress: Done
 */
 
 #ifndef HEADER_ECC_POINT_H
 #define HEADER_ECC_POINT_H
-#pragma once;
+#pragma once
 
 #include"common.h"
 

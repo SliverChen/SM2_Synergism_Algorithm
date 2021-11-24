@@ -1,3 +1,7 @@
+/*
+*	header of the SM2 Server
+*/
+
 #ifndef HEADER_SM2SERVER_H
 #define HEADER_SM2SERVER_H
 

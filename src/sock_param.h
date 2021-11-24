@@ -1,3 +1,8 @@
+/*
+*   the header of sock parameters
+*   this header include some 
+*/
+
 #ifndef HEADER_SOCK_PARAM_H
 #define HEADER_SOCK_PARAM_H
 
