@@ -39,6 +39,27 @@
 
         卡在这个进度也说明了SM2算法的理论基础也是比较重要的
         这样就不会在某个基础的地方卡半天
+    
+    目前进度(11.25 8:31):
+        为了验证昨天的想法，大概要做以下几点：
+        1、理解SM2算法的公式计算
+        2、证明公钥计算公式的有效性
+        3、代码计算的可行性
+
+    目前进度(11.25 9:52):
+        通过修改随机数生成的代码时发现vli_cmp()在比较随机数大小的时候是从最后一个数开始的
+        也就是说，vli_xx的计算最开始的那一端是最低位,而最后面的是最高位
+        这也大致说明了为什么有些地方需要翻转
+        那么在计算d1d2-1的时候，这个1的设计应该是{0x01,0x00,...,0x00}而不是{0x00,...,0x00,0x01}
+
+    目前进度(11.25 10:25):
+        通过仔细观察源码的实现细节，可以发现，对于vli_modxx的计算，后面的p_mod选取的都是curve_p而不是curve_n
+        curve_n的出现在源码中是valid_privateKey的时候描述的一段话
+        "生成的私钥需要保证其范围在[1,n-1]之间" 其中使用的n就是curve_n
+        也就是说后续在碰到vli_modxx计算的时候选取的是curve_p，在其他情况下都按照正常的思路选择curve_n来比较大小
+
+        同时无论如何修改都无法满足C1=[k]G在椭圆曲线上，目前这个k的生成限制是vli_cmp(curve_n,k)==1 && !vli_isZero(k)
+        或许随机数k还有其他限制条件没有考虑进来，需要后续进行深入的研究和不断测试。
 */
 
 #include "./src/sm2.h"
@@ -468,14 +489,14 @@ void test_sm2_encrypt_decrypt()
        //P = (d1d2-1)G
 
     uint8_t one[NUM_ECC_DIGITS] = {
+        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01};
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
     uint8_t *d1d2 = new uint8_t[NUM_ECC_DIGITS];
     uint8_t *d1d2_1 = new uint8_t[NUM_ECC_DIGITS];
-    vli_modMult(d1d2, d1_key, d2_key, curve_n);
-    vli_modSub(d1d2_1, d1d2, one, curve_n);
+    vli_modMult(d1d2, d1_key, d2_key, curve_p);
+    vli_modSub(d1d2_1, d1d2, one, curve_p);
 
     // EccPoint_mult(&p_publicKey,&curve_G,d1d2_1,NULL);
 
@@ -485,17 +506,19 @@ void test_sm2_encrypt_decrypt()
     //3.1 生成随机数(生成的随机数需要满足 C1 = kG在曲线上，放到加密内部好一点)
     uint8_t *p_random = new uint8_t[NUM_ECC_DIGITS];
     uint8_t *rand_str = nullptr;
-    EccPoint C1;
-    do
-    {
-        rand_str = nullptr;
-        makeRandom(rand_str);
-        tohex(rand_str, p_random, NUM_ECC_DIGITS);
-        EccPoint_mult(&C1,&curve_G,p_random,NULL);
-    }while(!EccPoint_is_on_curve(C1));
+    makeRandom(rand_str);
+    tohex(rand_str,p_random,NUM_ECC_DIGITS);
 
 
 #ifdef __SM2_TEST_DEBUG__
+
+    EccPoint C1;
+    EccPoint_mult(&C1,&curve_G,p_random,NULL);
+    if(!EccPoint_is_on_curve(C1))
+    {
+        MES_ERROR("the C1 may be invalid, for its not on the curve\n");
+    }
+
     MES_INFO("encrypting random string is :");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {

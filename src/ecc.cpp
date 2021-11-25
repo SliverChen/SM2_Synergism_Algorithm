@@ -5,44 +5,68 @@
  */
 void makeRandom(uint8_t *&randStr)
 {
-	/* convert uint8[NUM_ECC_DIGITs] into string type */
-	string curveN_str = "";
-	tostr(curve_n, curveN_str, NUM_ECC_DIGITS);
-	char *curveN = const_cast<char *>(curveN_str.c_str());
+	/*
+		maybe the random number that we create isn't valid for the limit
+		try to use the BN_rand() function
+	*/
 
-	/* make hex into bignum type */
-	BIGNUM *cn = nullptr;
-	BN_hex2bn(&cn, curveN);
+	// 	/* convert uint8[NUM_ECC_DIGITs] into string type */
+	// 	string curveN_str = "";
+	// 	tostr(curve_n, curveN_str, NUM_ECC_DIGITS);
+	// 	char *curveN = const_cast<char *>(curveN_str.c_str());
 
-	/* apply a cache for bignum */
+	// 	/* make hex into bignum type */
+	// 	BIGNUM *cn = nullptr;
+	// 	BN_hex2bn(&cn, curveN);
+
+	// 	/* apply a cache for bignum */
+	// 	BIGNUM *bn = BN_new();
+
+	// 	//the bits of the bignum
+	// 	int bits = 8 * NUM_ECC_DIGITS;
+
+	// 	//BN_rand_range: choose a number between [0,n-1]
+	// 	//see: https://www.openssl.org/docs/man3.0/man3/BN_rand_range.html
+
+	// 	//we should make sure that the number is not zero
+	// 	//(the random number is in [1,n-1])
+	// 	do
+	// 	{
+	// 		BN_rand_range(bn, cn);
+	// 	} while (BN_is_zero(bn));
+
+	// 	//convert bignum into hex
+	// 	char *str = BN_bn2hex(bn);
+
+	// 	//convert char* into unsigned char*
+	// 	randStr = (unsigned char *)(str);
+
+	// #ifdef __SM2_DEBUG__
+	// 	MES_INFO(" the random is defined as: %s\n", randStr);
+	// #endif //__SM2_DEBUG__
+
+	// 	/* release the cache of the bignum */
+	// 	BN_free(bn);
+	// 	BN_free(cn);
+
 	BIGNUM *bn = BN_new();
+	int bitLen = 8 * NUM_ECC_DIGITS;
+	uint8_t *p_random = new uint8_t[NUM_ECC_DIGITS];
 
-	//the bits of the bignum
-	int bits = 8 * NUM_ECC_DIGITS;
-
-	//BN_rand_range: choose a number between [0,n-1]
-	//see: https://www.openssl.org/docs/man3.0/man3/BN_rand_range.html
-
-	//we should make sure that the number is not zero
-	//(the random number is in [1,n-1])
 	do
 	{
-		BN_rand_range(bn, cn);
-	} while (BN_is_zero(bn));
+		BN_rand(bn, bitLen, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY);
+		randStr = reinterpret_cast<uint8_t *>(BN_bn2hex(bn));
+		tohex(randStr,p_random,NUM_ECC_DIGITS);
 
-	//convert bignum into hex
-	char *str = BN_bn2hex(bn);
-
-	//convert char* into unsigned char*
-	randStr = (unsigned char *)(str);
+	} while (vli_cmp(curve_n, p_random) != 1 || vli_isZero(p_random));
 
 #ifdef __SM2_DEBUG__
-	MES_INFO(" the random is defined as: %s\n", randStr);
+	MES_INFO("the random string is: %s\n",randStr);
 #endif //__SM2_DEBUG__
 
-	/* release the cache of the bignum */
 	BN_free(bn);
-	BN_free(cn);
+	FREEARRAY(p_random);
 }
 
 #ifdef __cplusplus
