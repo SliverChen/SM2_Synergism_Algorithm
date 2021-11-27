@@ -1,30 +1,25 @@
 {
     "configurations": [
-        {
-            "name": "Win32",
-            "includePath": [
-                "${workspaceFolder}/**",
-                "${workspaceFolder}/3rdParty/include",
-                "${workspaceFolder}/3rdParty/include/openssl",
-                "${workspaceRoot}"
-            ],
-            "browse": {
-                "path": [
-                    "${workspaceRoot}",
-                    "${workspaceFolder}/3rdParty/lib"
-                ]
-            },
-            "defines": [
-                "_DEBUG",
-                "UNICODE",
-                "_UNICODE"
-            ],
-            "windowsSdkVersion": "10.0.19041.0",
-            "compilerPath": "E:/Studies/Tools/MinGW_v8.1/mingw64/bin/g++.exe",
-            "cStandard": "c11",
-            "cppStandard": "c++17",
-            "intelliSenseMode": "gcc-x64"
-        }
+      {
+        "name": "Mac",
+        "includePath": [
+          "${workspaceFolder}/**",
+          "/Library/Developer/CommandLineTools/usr/include",
+          "/Library/Developer/CommandLineTools/usr/lib/clang/13.0.0/include",
+          "./3rdParty/include"
+          // 请根据你的clang版本修改，我这里是13.0.0
+        ],
+        "defines": [],
+        "macFrameworkPath": [
+          "/System/Library/Frameworks",
+          "/Library/Frameworks"
+        ],
+        "compilerPath": "/usr/bin/clang++",
+        "cStandard": "c11",
+        "cppStandard": "c++17",
+        "intelliSenseMode": "clang-x64"
+        // "compileCommands": "${workspaceFolder}/build/compile_commands.json"
+      }
     ],
     "version": 4
-}
+  }

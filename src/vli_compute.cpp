@@ -11,7 +11,11 @@ void tostr(const uint8_t *source, string &result, int len)
     for (i = 0; i < len; ++i)
     {
         //采用格式串的方式获取hex的字符串形式
+#ifdef _WIN32
         sprintf_s(ch, len * 2, "%02X", source[i]);
+#else
+        sprintf(ch, "%02X", source[i]);
+#endif //_WIN32
 
         //这里说明了用string的原因
         //char*的拼接不安全

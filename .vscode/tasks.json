@@ -1,30 +1,35 @@
 {
+    "version": "2.0.0",
     "tasks": [
-        {
-            "type": "cppbuild",
-            "label": "g++.exe build active file",
-            "command": "E:\\Studies\\Tools\\MinGW_v8.1\\mingw64\\bin\\g++.exe",
-            "args": [
-                "-fdiagnostics-color=always",
-                "-g",
-                "${file}",
-                "-I'${workspaceFolder}\\3rdParty\\include\\openssl'",
-                "-L'${workspaceFolder}\\3rdParty\\lib'",
-                "-o",
-                "${fileDirname}\\${fileBasenameNoExtension}.exe"
-            ],
-            "options": {
-                "cwd": "E:\\Studies\\Tools\\MinGW_v8.1\\mingw64\\bin"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "detail": "调试器生成的任务。"
+      {
+        "label": "Build with Clang", //这个任务的名字在launch.json最后一项配置
+        "type": "shell",
+        "command": "clang++",
+        "args": [
+          "-std=c++17",
+          "-stdlib=libc++",
+          "-I",
+          "./3rdParty/include",
+          "-L",
+          "./3rdParty/lib",
+          "-g",
+          // 生成调试信息，GUN可使用该参数
+          "${file}",
+          // file指正在打开的文件
+          "-o",
+          // 生成可执行文件
+          "${fileDirname}/${fileBasenameNoExtension}"
+          // fileDirname指正在打开的文件所在的文件夹
+          // fileBasenammeNoExtension指没有扩展名的文件，unix中可执行文件属于此类
+        ],
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": ["$gcc"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
         }
-    ],
-    "version": "2.0.0"
-}
+      }
+    ]
+  }

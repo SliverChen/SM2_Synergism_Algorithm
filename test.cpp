@@ -60,6 +60,23 @@
 
         同时无论如何修改都无法满足C1=[k]G在椭圆曲线上，目前这个k的生成限制是vli_cmp(curve_n,k)==1 && !vli_isZero(k)
         或许随机数k还有其他限制条件没有考虑进来，需要后续进行深入的研究和不断测试。
+
+    目前进度(11.26 9:11):
+        由于使用mac环境，导致原本代码上的windows.h无法使用
+        为了能够让代码具有兼容性，寻找另一个能够替代windows.h下SYSTEMTIME的标准库，同时能够在win和mac环境下使用
+
+    目前进度(11.26 16:45):
+        由于mac环境的限制，导致gcc的编译也出现了问题
+        主要表现为在sm3.c的文件下使用了fopen_s的函数，该函数无法在C99标准下使用
+        （至少它的报错信息是提示implicit declaration of function 'fopen_s' is invalid in C99
+        [-Werror,-Wimplicit-function-declaration]）
+        至于是编译环境的问题还是真的不能在C99标准下使用还需要深入研究
+
+        出现上面的问题的前置问题是主函数定位不到头文件的实现文件导致出现
+        undefined symbols for architecture arm64的错误
+
+        需要单独编译一遍所有有实现文件的头文件，生成.o文件
+        然后再使用ar将所有的.o文件合并成.a文件供主函数识别
 */
 
 #include "./src/sm2.h"
@@ -485,7 +502,7 @@ void test_sm2_encrypt_decrypt()
         printf("%02X", p_publicKey.y[i]);
     }
     printf("\n");
-#endif //__SM2_TEST_DEBUG__
+#endif //__SM2_TEST_DEBUG__ \
        //P = (d1d2-1)G
 
     uint8_t one[NUM_ECC_DIGITS] = {
@@ -507,14 +524,13 @@ void test_sm2_encrypt_decrypt()
     uint8_t *p_random = new uint8_t[NUM_ECC_DIGITS];
     uint8_t *rand_str = nullptr;
     makeRandom(rand_str);
-    tohex(rand_str,p_random,NUM_ECC_DIGITS);
-
+    tohex(rand_str, p_random, NUM_ECC_DIGITS);
 
 #ifdef __SM2_TEST_DEBUG__
 
     EccPoint C1;
-    EccPoint_mult(&C1,&curve_G,p_random,NULL);
-    if(!EccPoint_is_on_curve(C1))
+    EccPoint_mult(&C1, &curve_G, p_random, NULL);
+    if (!EccPoint_is_on_curve(C1))
     {
         MES_ERROR("the C1 may be invalid, for its not on the curve\n");
     }
