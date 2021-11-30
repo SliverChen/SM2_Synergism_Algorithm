@@ -6,7 +6,7 @@
           "${workspaceFolder}/**",
           "/Library/Developer/CommandLineTools/usr/include",
           "/Library/Developer/CommandLineTools/usr/lib/clang/13.0.0/include",
-          "./3rdParty/include"
+          "./3rdParty/Mac/include"
           // 请根据你的clang版本修改，我这里是13.0.0
         ],
         "defines": [],

@@ -9,9 +9,9 @@
           "-std=c++17",
           "-stdlib=libc++",
           "-I",
-          "./3rdParty/include",
+          "./3rdParty/Mac/include",
           "-L",
-          "./3rdParty/lib",
+          "./3rdParty/Mac/lib",
           "-g",
           // 生成调试信息，GUN可使用该参数
           "${file}",
