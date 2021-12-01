@@ -104,6 +104,15 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     uint8_t *C3 = new uint8_t[NUM_ECC_DIGITS];
     sm3_context sm3_ctx;
 
+#ifdef __SM2_TEST_DEBUG__
+    MES_INFO("the source random number is: ");
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", p_random[i]);
+    }
+    printf("\n");
+#endif //__SM2_TEST_DEBUG__
+
     //A1:generate random number k;
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
@@ -122,32 +131,6 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     //A2:C1=[k]G;
     EccPoint_mult(&C1, &curve_G, k, NULL);
 
-#ifdef __SM2_TEST_DEBUG__
-    MES_INFO("after EccPoint_mult, C1.x values: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", C1.x[i]);
-    }
-    printf("\n");
-
-    MES_INFO("after EccPoint_mult, C1.y values: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", C1.y[i]);
-    }
-    printf("\n");
-
-    if (EccPoint_is_on_curve(C1))
-    {
-        MES_INFO("before exchange,the C1 is on the curve\n");
-    }
-    else
-    {
-        MES_ERROR("before exchange,the C1 is not on the curve\n");
-    }
-
-#endif // __SM2_TEST_DEBUG__
-
     for (i = 0; i < NUM_ECC_DIGITS / 2; i++)
     {
         tmp = C1.x[i];
@@ -161,13 +144,13 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the encrypting C1.x is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.x[i]);
     }
     printf("\n");
     MES_INFO("the encrypting C1.y is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.y[i]);
     }
@@ -205,13 +188,13 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the encrypting point2.x is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", point2_revert.x[i]);
     }
     printf("\n");
     MES_INFO("the encrypting point2.y is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", point2_revert.y[i]);
     }
@@ -228,7 +211,6 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
         MES_ERROR("the r equals zero, need a different random number\n");
         return 0;
     }
-    C2[plain_len] = '\0';
 
     //A6: C2 = M^t;
     for (i = 0; i < plain_len; i++)
@@ -238,7 +220,7 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the encrypting C2 is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C2[i]);
     }
@@ -254,7 +236,7 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the encrypting C3 is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C3[i]);
     }

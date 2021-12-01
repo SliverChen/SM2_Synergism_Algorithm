@@ -31,8 +31,8 @@ using std::string;
 
 //规范化调试语句
 typedef struct tm *tm_t;
-static time_t curtime;
-tm_t timenow;
+static time_t curtime; //同下
+static tm_t timenow;   //全局变量需要注意声明为static（否则会出现重定义的情况）
 
 #define MES_INFO(...)                                  \
     time(&curtime);                                    \
@@ -56,9 +56,12 @@ tm_t timenow;
 #define NUM_ECC_DIGITS 32
 
 //内存清理
+
+//如果指针调用的是一个数组，则需要调用FREEARRAY
 #define FREE(X) \
     delete X;   \
     X = nullptr;
+
 #define FREEARRAY(X) \
     delete[] X;      \
     X = nullptr;
