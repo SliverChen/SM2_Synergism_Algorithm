@@ -4,14 +4,14 @@
       {
         "label": "Build with Clang", //这个任务的名字在launch.json最后一项配置
         "type": "shell",
-        "command": "clang++",
+        "command": "g++",
         "args": [
           "-std=c++17",
           "-stdlib=libc++",
           "-I",
-          "./3rdParty/include",
+          "./3rdParty/Windows/include",
           "-L",
-          "./3rdParty/lib",
+          "./3rdParty/Windows/lib",
           "-g",
           // 生成调试信息，GUN可使用该参数
           "${file}",

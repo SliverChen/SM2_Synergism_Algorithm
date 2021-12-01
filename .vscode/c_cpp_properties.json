@@ -1,25 +1,21 @@
 {
     "configurations": [
-      {
-        "name": "Mac",
-        "includePath": [
-          "${workspaceFolder}/**",
-          "/Library/Developer/CommandLineTools/usr/include",
-          "/Library/Developer/CommandLineTools/usr/lib/clang/13.0.0/include",
-          "./3rdParty/include"
-          // 请根据你的clang版本修改，我这里是13.0.0
-        ],
-        "defines": [],
-        "macFrameworkPath": [
-          "/System/Library/Frameworks",
-          "/Library/Frameworks"
-        ],
-        "compilerPath": "/usr/bin/clang++",
-        "cStandard": "c11",
-        "cppStandard": "c++17",
-        "intelliSenseMode": "clang-x64"
-        // "compileCommands": "${workspaceFolder}/build/compile_commands.json"
-      }
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/3rdParty/Windows/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "C:\\Program Files\\mingw-w64\\x86_64-8.1.0-win32-seh-rt_v6-rev0\\mingw64\\bin\\g++.exe",
+            "cStandard": "gnu17",
+            "cppStandard": "gnu++14",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
     ],
     "version": 4
-  }
+}

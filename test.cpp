@@ -80,6 +80,7 @@
 */
 
 #include "./src/sm2.h"
+#pragma warning(disable:4996);
 
 int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publicKey, uint8_t p_random[NUM_ECC_DIGITS], uint8_t *plain_text, unsigned int plain_len)
 {
@@ -435,7 +436,7 @@ void test_sm2_encrypt_decrypt()
 {
     //1、设置加解密信息
     const char *plain_text = "Hello my friend";
-    unsigned int plain_len = strlen(plain_text);
+    unsigned int plain_len = static_cast<unsigned int>(strlen(plain_text));
 
     MES_INFO("the plain text is: %s\n", plain_text);
 
@@ -554,7 +555,7 @@ void test_sm2_encrypt_decrypt()
     MES_INFO("sm2_encrypt result:%d,result's len: %d\n", ret, encdata_len);
 
     MES_INFO("encrypting result: ");
-    for (int i = 0; i < encdata_len; ++i)
+    for (unsigned int i = 0; i < encdata_len; ++i)
     {
         printf("%02X", encdata[i]);
         if (1 == (i + 1) % 32)

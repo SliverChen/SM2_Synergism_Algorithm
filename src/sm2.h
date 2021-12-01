@@ -6,10 +6,10 @@
 #ifndef HEADER_SM2_H
 #define HEADER_SM2_H
 
-#include"common.h"
-#include"sm3.h"
-#include"vli_compute.h"
-#include"ecc.h"
+#include "common.h"
+#include "sm3.h"
+#include "vli_compute.h"
+#include "ecc.h"
 // #include"sm2Client.h"
 // #include"sm2Server.h"
 
@@ -18,9 +18,7 @@
 */
 #define __SM2_DEBUG__
 
-
 #define __SM2_TEST_DEBUG__ 1
-
 
 /*
     Inline assembly options
@@ -28,7 +26,7 @@
 */
 #define ecc_asm_none 0
 #ifndef ECC_ASM
-    #define ECC_ASM ec_asm_none
+#define ECC_ASM ec_asm_none
 #endif //ECC_ASM
 
 #endif //HEAEDER_SM2_H

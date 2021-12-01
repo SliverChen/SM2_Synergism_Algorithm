@@ -13,6 +13,8 @@
 #include <unistd.h>
 #endif //_WIN32
 
+#define _CRT_SECURE_NO_WARNINGS 1
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <iomanip>
@@ -32,8 +34,10 @@ using std::string;
 //规范化调试语句
 typedef struct tm *tm_t;
 static time_t curtime;
-tm_t timenow;
+static tm_t timenow;
 
+//localtime在win环境下是被认为不安全的，需要加上_CRT_SECURE_NO_WARNINGS
+//这里可能存在兼容性的问题
 #define MES_INFO(...)                                  \
     time(&curtime);                                    \
     timenow = localtime(&curtime);                     \
