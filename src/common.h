@@ -34,18 +34,26 @@ typedef struct tm *tm_t;
 static time_t curtime; //同下
 static tm_t timenow;   //全局变量需要注意声明为static（否则会出现重定义的情况）
 
-#define MES_INFO(...)                                  \
-    time(&curtime);                                    \
-    timenow = localtime(&curtime);                     \
-    printf("[%02d:%02d:%02d Info]:", timenow->tm_hour, \
-           timenow->tm_min, timenow->tm_sec);          \
+#define MES_INFO(...)                              \
+    time(&curtime);                                \
+#ifdef _WIN32                                  \
+        timenow = localtime_s(&curtime);           \
+#else \ 
+        timenow = localtime(&curtime);             \
+#endif \ 
+printf("[%02d:%02d:%02d Info]:", timenow->tm_hour, \
+       timenow->tm_min, timenow->tm_sec);          \
     printf(__VA_ARGS__)
 
-#define MES_ERROR(...)                                  \
-    time(&curtime);                                     \
-    timenow = localtime(&curtime);                      \
-    printf("[%02d:%02d:%02d Error]:", timenow->tm_hour, \
-           timenow->tm_min, timenow->tm_sec);           \
+#define MES_ERROR(...)                              \
+    time(&curtime);                                 \
+#ifdef _WIN32                                   \
+        timenow = localtime_s(&curtime);            \
+#else \ 
+        timenow = localtime(&curtime);              \
+#endif \ 
+printf("[%02d:%02d:%02d Error]:", timenow->tm_hour, \
+       timenow->tm_min, timenow->tm_sec);           \
     printf(__VA_ARGS__)
 
 //通用公式计算(主要用于后续对SM2的拓展，目前用32位即可)

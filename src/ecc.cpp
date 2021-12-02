@@ -11,6 +11,22 @@ void makeRandom(uint8_t *&randStr)
         curve_n_revrt[i] = curve_n[NUM_ECC_DIGITS - i - 1];
     }
 
+#ifdef __SM2_TEST_DEBUG__
+    MES_INFO("before reverting, the curve N is: ");
+    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", curve_n[i]);
+    }
+    printf("\n");
+
+    MES_INFO("after reverting, the curve N is: ");
+    for (int i = 0, i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", curve_n_revrt[i]);
+    }
+    printf("\n");
+#endif //__SM2_TEST_DEBUG__
+
     string curveN_Str;
     tostr(curve_n_revrt, curveN_Str, NUM_ECC_DIGITS);
 

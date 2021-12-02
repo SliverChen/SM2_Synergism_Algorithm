@@ -114,10 +114,8 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 #endif //__SM2_TEST_DEBUG__
 
     //A1:generate random number k;
-    for (i = 0; i < NUM_ECC_DIGITS; i++)
-    {
-        k[i] = p_random[NUM_ECC_DIGITS - i - 1];
-    }
+    //明确一点，随机数的翻转只有在本身随机数不是正序的状态下执行
+    //一般情况如当前的测试代码并不需要进行翻转
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the random number k is: ");
@@ -129,8 +127,14 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 #endif //_SM2_TEST_DEBUG__
 
     //A2:C1=[k]G;
+    //明确一点：椭圆曲线的乘法本质上是有限域上的模加法
+    //因此乘法的结果的x和y必然满足在[1,n-1]的范围内
+    //注意解密的时候会判断这个结果是否在椭圆曲线上
+    //因此如果加密的时候不满足这个条件，后面的解密操作也会出现错误
+
     EccPoint_mult(&C1, &curve_G, k, NULL);
 
+    //翻转操作（需要注意只对一半的值执行，否则会与原本不变
     for (i = 0; i < NUM_ECC_DIGITS / 2; i++)
     {
         tmp = C1.x[i];
@@ -167,6 +171,10 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 #endif //__SM2_TEST_DEBUG__
 
     //A3:h=1;S=[h]Pb;
+    //公钥为什么要翻转？
+    //大概率是公钥在传进来之前是倒序的
+    //因此我们尝试不加翻转
+
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         Pb.x[i] = p_publicKey->x[NUM_ECC_DIGITS - i - 1];
@@ -179,6 +187,10 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     }
 
     //A4:[k]Pb = (x2, y2);
+    //这里为什么要翻转
+    //可以看到后面很多计算都会直接跟翻转后的结果相关
+    // kdf C2 hash
+    //因此这种情况下应该属于正常处理，并不需要修改
     EccPoint_mult(&point2, &Pb, k, NULL);
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {

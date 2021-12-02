@@ -17,6 +17,7 @@
       "comments": true,
       "strings": true
     },
+    "C_Cpp.errorSquiggles": "Disabled",
   }
   
   
