@@ -80,9 +80,8 @@
 */
 
 #include "./src/sm2.h"
-#pragma warning(disable:4996);
 
-int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publicKey, uint8_t p_random[NUM_ECC_DIGITS], uint8_t *plain_text, unsigned int plain_len)
+int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publicKey, uint8_t *plain_text, unsigned int plain_len)
 {
     int i = 0;
     uint8_t PC = 0X04;
@@ -99,10 +98,13 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     sm3_context sm3_ctx;
 
     //A1:generate random number k;
-    for (i = 0; i < NUM_ECC_DIGITS; i++)
-    {
-        k[i] = p_random[NUM_ECC_DIGITS - i - 1];
-    }
+    uint8_t* randStr = nullptr;
+    makeRandom(randStr);
+    tohex(randStr, k, NUM_ECC_DIGITS);
+    
+    //这里不需要反转
+    //因为参考算法传进来的随机数本身是反序的
+    //我们这里生成的随机数是正序的
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the random number k is: ");
@@ -117,14 +119,14 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     EccPoint_mult(&C1, &curve_G, k, NULL);
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("after EccPoint_mult, C1.x values: ");
+    MES_INFO("C1.x is(before revert): ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.x[i]);
     }
     printf("\n");
 
-    MES_INFO("after EccPoint_mult, C1.y values: ");
+    MES_INFO("C1.y is(before revert): ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.y[i]);
@@ -142,6 +144,9 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
 #endif // __SM2_TEST_DEBUG__
 
+    //这里反转是为了后续将其放到密文当中
+    //没有任何计算的意义
+    //需要注意的是这里只需要循环一半，否则会与原本保持不变
     for (i = 0; i < NUM_ECC_DIGITS / 2; i++)
     {
         tmp = C1.x[i];
@@ -153,35 +158,17 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
         C1.y[NUM_ECC_DIGITS - i - 1] = tmp;
     }
 
-#ifdef __SM2_TEST_DEBUG__
-    MES_INFO("the encrypting C1.x is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", C1.x[i]);
-    }
-    printf("\n");
-    MES_INFO("the encrypting C1.y is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", C1.y[i]);
-    }
-    printf("\n");
-
-    if (EccPoint_is_on_curve(C1))
-    {
-        MES_INFO("the encrypting C1 is on the curve\n");
-    }
-    else
-    {
-        MES_ERROR("the encrypting C1 is not on the curve\n");
-    }
-#endif //__SM2_TEST_DEBUG__
-
     //A3:h=1;S=[h]Pb;
+
+    //这里不需要反转
+    //因为参考算法的测试代码传进来的公钥本身是反序的
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
-        Pb.x[i] = p_publicKey->x[NUM_ECC_DIGITS - i - 1];
-        Pb.y[i] = p_publicKey->y[NUM_ECC_DIGITS - i - 1];
+        //Pb.x[i] = p_publicKey->x[NUM_ECC_DIGITS - i - 1];
+        //Pb.y[i] = p_publicKey->y[NUM_ECC_DIGITS - i - 1];
+
+        Pb.x[i] = p_publicKey->x[i];
+        Pb.y[i] = p_publicKey->y[i];
     }
     if (EccPoint_isZero(&Pb))
     {
@@ -191,6 +178,9 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
     //A4:[k]Pb = (x2, y2);
     EccPoint_mult(&point2, &Pb, k, NULL);
+
+    //这里反转是为了后续对C2的计算
+    //涉及到了kdf函数的使用
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         point2_revert.x[i] = point2.x[NUM_ECC_DIGITS - i - 1];
@@ -198,13 +188,13 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     }
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("the encrypting point2.x is: ");
+    MES_INFO("point2.x is(after revert): ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", point2_revert.x[i]);
     }
     printf("\n");
-    MES_INFO("the encrypting point2.y is: ");
+    MES_INFO("point2.y is(after revert): ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", point2_revert.y[i]);
@@ -231,8 +221,8 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     }
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("the encrypting C2 is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    MES_INFO("C2 is: ");
+    for (int i = 0; i < plain_len; ++i)
     {
         printf("%02X", C2[i]);
     }
@@ -247,7 +237,7 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     sm3_finish(&sm3_ctx, C3);
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("the encrypting C3 is: ");
+    MES_INFO("C3 is : ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C3[i]);
@@ -296,11 +286,16 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     p_C2 = cipher_text + 97;
     C2_len = cipher_len - 97;
 
+
+    //这里只需要对提取出来的C1进行反转
+    //私钥不需要变化，因为计算出来的私钥是正序的
+    //与参考算法的测试代码不同，传进来之前私钥是反序的
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         C1.x[i] = p_C1->x[NUM_ECC_DIGITS - i - 1];
         C1.y[i] = p_C1->y[NUM_ECC_DIGITS - i - 1];
-        p_pvk[i] = p_priKey[NUM_ECC_DIGITS - i - 1];
+        //p_pvk[i] = p_priKey[NUM_ECC_DIGITS - i - 1];
+        p_pvk[i] = p_priKey[i];
     }
 
 #ifdef __SM2_TEST_DEBUG__
@@ -311,13 +306,13 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     }
     printf("\n");
 
-    MES_INFO("extract the C1 from cipher, C1.x is: ");
+    MES_INFO("C1.x is(after revert): ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.x[i]);
     }
     printf("\n");
-    MES_INFO("extract the C1 from cipher, C1.y is: ");
+    MES_INFO("C1.y is(after revert): ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.y[i]);
@@ -329,7 +324,9 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     if (1 != ret)
     {
         MES_ERROR("C1 is not on curve\n");
-        return 0;
+
+        /*******************test*************************/
+        //return 0;
     }
 
     //B2:h=1;S=[h]C1
@@ -341,10 +338,17 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
 
     //B3:[dB]C1 = (x2,y2)
     EccPoint_mult(&point2, &C1, p_pvk, NULL);
+
+    //这里为什么要反转*******************************************这里有问题
+    //本身放在密文的C2在计算的时候就是反序的
+    //如果提取出来再反转就变成了A4计算步骤的值
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        point2_revrt.x[i] = point2.x[NUM_ECC_DIGITS - i - 1];
-        point2_revrt.y[i] = point2.y[NUM_ECC_DIGITS - i - 1];
+        //point2_revrt.x[i] = point2.x[NUM_ECC_DIGITS - i - 1];
+        //point2_revrt.y[i] = point2.y[NUM_ECC_DIGITS - i - 1];
+
+        point2_revrt.x[i] = point2.x[i];
+        point2_revrt.y[i] = point2.y[i];
     }
 
 #ifdef __SM2_TEST_DEBUG__
@@ -360,6 +364,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     {
         printf("%02X", point2.y[i]);
     }
+    printf("\n");
 #endif
     //B4: t=KDF(x2||y2,klen)
     memcpy(x2y2, point2_revrt.x, NUM_ECC_DIGITS);
@@ -376,7 +381,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("kdf out: ");
-    for (i = 0; i < *plain_text; ++i)
+    for (i = 0; i < *plain_len; ++i)
     {
         printf("%02X", plain_text[i]);
     }
@@ -440,7 +445,6 @@ void test_sm2_encrypt_decrypt()
 
     MES_INFO("the plain text is: %s\n", plain_text);
 
-    MES_INFO("setting the private key and public key\n");
     //2、设置公私钥
     uint8_t *d1_str = NULL;
     uint8_t *d2_str = NULL;
@@ -519,30 +523,7 @@ void test_sm2_encrypt_decrypt()
     // EccPoint_mult(&p_publicKey,&curve_G,d1d2_1,NULL);
 
     //3、加密过程
-    MES_INFO("encrypting..\n");
-
-    //3.1 生成随机数(生成的随机数需要满足 C1 = kG在曲线上，放到加密内部好一点)
-    uint8_t *p_random = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t *rand_str = nullptr;
-    makeRandom(rand_str);
-    tohex(rand_str, p_random, NUM_ECC_DIGITS);
-
-#ifdef __SM2_TEST_DEBUG__
-
-    EccPoint C1;
-    EccPoint_mult(&C1, &curve_G, p_random, NULL);
-    if (!EccPoint_is_on_curve(C1))
-    {
-        MES_ERROR("the C1 may be invalid, for its not on the curve\n");
-    }
-
-    MES_INFO("encrypting random string is :");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", p_random[i]);
-    }
-    printf("\n");
-#endif //__SM2_TEST_DEBUG__
+    MES_INFO("****************encrypting*******************\n");
 
     //3.2 加密
     uint8_t *encdata = new uint8_t[1024]; //密文
@@ -550,7 +531,7 @@ void test_sm2_encrypt_decrypt()
     uint8_t *plaintext = (uint8_t *)(plain_text);
 
     int ret = sm2_encrypt(encdata, &encdata_len, &p_publicKey,
-                          p_random, plaintext, plain_len);
+        plaintext, plain_len);
 
     MES_INFO("sm2_encrypt result:%d,result's len: %d\n", ret, encdata_len);
 
@@ -561,10 +542,10 @@ void test_sm2_encrypt_decrypt()
         if (1 == (i + 1) % 32)
             printf("\n");
     }
-    printf("\n");
+    printf("\n\n");
 
     //4、解密过程
-    MES_INFO("decrypting..\n");
+    MES_INFO("*****************decrypting*****************\n");
     uint8_t *p_out = new uint8_t[NUM_ECC_DIGITS];
     unsigned int p_out_len = 0;
     ret = sm2_decrypt_self(
