@@ -1,6 +1,23 @@
 {
-    "files.associations": {
-        "mutex": "cpp"
+    //  - onWindowChange: A dirty file is automatically saved when the window loses focus
+    // "files.autoSave": "onFocusChange",
+    // Controls the font size in pixels.
+    "editor.fontSize": 14,
+    // The number of spaces a tab is equal to. This setting is overridden based on the file contents when `editor.detectIndentation` is on.
+    "editor.tabSize": 4,
+    // Configure glob patterns for excluding files and folders. For example, the files explorer decides which files and folders to show or hide based on this setting. Read more about glob patterns [here](https://code.visualstudio.com/docs/editor/codebasics#_advanced-search-options).
+    "files.exclude": {
+      "**/.git": true,
+      "**/.svn": true,
+      "**/.hg": true,
+      "**/CVS": true,
+      "**/.DS_Store": true
     },
-    "C_Cpp.errorSquiggles": "Disabled"
-}
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": true,
+      "strings": true
+    },
+  }
+  
+  

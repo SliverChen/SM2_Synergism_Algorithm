@@ -4,23 +4,40 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 
 typedef unsigned int uint;
 
 #define CONCAT1(a, b) a##b
 #define CONCAT(a, b) CONCAT1(a, b)
 
-#define Curve_A_32 {0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF}
+#define Curve_A_32                                                                                                                                                                                     \
+    {                                                                                                                                                                                                  \
+        0xFC, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF \
+    }
 
-#define Curve_P_32 {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF}
+#define Curve_P_32                                                                                                                                                                                     \
+    {                                                                                                                                                                                                  \
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF \
+    }
 
-#define Curve_B_32 {0x93, 0x0E, 0x94, 0x4D, 0x41, 0xBD, 0xBC, 0xDD, 0x92, 0x8F, 0xAB, 0x15, 0xF5, 0x89, 0x97, 0xF3, 0xA7, 0x09, 0x65, 0xCF, 0x4B, 0x9E, 0x5A, 0x4D, 0x34, 0x5E, 0x9F, 0x9D, 0x9E, 0xFA, 0xE9, 0x28}
+#define Curve_B_32                                                                                                                                                                                     \
+    {                                                                                                                                                                                                  \
+        0x93, 0x0E, 0x94, 0x4D, 0x41, 0xBD, 0xBC, 0xDD, 0x92, 0x8F, 0xAB, 0x15, 0xF5, 0x89, 0x97, 0xF3, 0xA7, 0x09, 0x65, 0xCF, 0x4B, 0x9E, 0x5A, 0x4D, 0x34, 0x5E, 0x9F, 0x9D, 0x9E, 0xFA, 0xE9, 0x28 \
+    }
 
-#define Curve_G_32 { \
-    {0xC7, 0x74, 0x4C, 0x33, 0x89, 0x45, 0x5A, 0x71, 0xE1, 0x0B, 0x66, 0xF2, 0xBF, 0x0B, 0xE3, 0x8F, 0x94, 0xC9, 0x39, 0x6A, 0x46, 0x04, 0x99, 0x5F, 0x19, 0x81, 0x19, 0x1F, 0x2C, 0xAE, 0xC4, 0x32}, \
-    {0xA0, 0xF0, 0x39, 0x21, 0xE5, 0x32, 0xDF, 0x02, 0x40, 0x47, 0x2A, 0xC6, 0x7C, 0x87, 0xA9, 0xD0, 0x53, 0x21, 0x69, 0x6B, 0xE3, 0xCE, 0xBD, 0x59, 0x9C, 0x77, 0xF6, 0xF4, 0xA2, 0x36, 0x37, 0xBC}}
+#define Curve_G_32                                                                                                                                                                                         \
+    {                                                                                                                                                                                                      \
+        {0xC7, 0x74, 0x4C, 0x33, 0x89, 0x45, 0x5A, 0x71, 0xE1, 0x0B, 0x66, 0xF2, 0xBF, 0x0B, 0xE3, 0x8F, 0x94, 0xC9, 0x39, 0x6A, 0x46, 0x04, 0x99, 0x5F, 0x19, 0x81, 0x19, 0x1F, 0x2C, 0xAE, 0xC4, 0x32},  \
+        {                                                                                                                                                                                                  \
+            0xA0, 0xF0, 0x39, 0x21, 0xE5, 0x32, 0xDF, 0x02, 0x40, 0x47, 0x2A, 0xC6, 0x7C, 0x87, 0xA9, 0xD0, 0x53, 0x21, 0x69, 0x6B, 0xE3, 0xCE, 0xBD, 0x59, 0x9C, 0x77, 0xF6, 0xF4, 0xA2, 0x36, 0x37, 0xBC \
+        }                                                                                                                                                                                                  \
+    }
 
-#define Curve_N_32 {0x23, 0x41, 0xD5, 0x39, 0x09, 0xF4, 0xBB, 0x53, 0x2B, 0x05, 0xC6, 0x21, 0x6B, 0xDF, 0x03, 0x72, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF}
+#define Curve_N_32                                                                                                                                                                                     \
+    {                                                                                                                                                                                                  \
+        0x23, 0x41, 0xD5, 0x39, 0x09, 0xF4, 0xBB, 0x53, 0x2B, 0x05, 0xC6, 0x21, 0x6B, 0xDF, 0x03, 0x72, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF \
+    }
 
 static uint8_t curve_a[NUM_ECC_DIGITS] = CONCAT(Curve_A_, NUM_ECC_DIGITS);
 static uint8_t curve_p[NUM_ECC_DIGITS] = CONCAT(Curve_P_, NUM_ECC_DIGITS);
@@ -32,28 +49,28 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
 
 void tohex(const uint8_t *source, uint8_t *result, int len)
 {
-	uint8_t h1, h2;
-	uint8_t s1, s2;
-	int i;
-	for (i = 0; i < len; i++)
-	{
-		h1 = source[2 * i];
-		h2 = source[2 * i + 1];
-		s1 = toupper(h1) - '0';
-		if (s1 > 9)
-			s1 = s1 - ('A' - ':');
-		s2 = toupper(h2) - '0';
-		if (s2 > 9)
-			s2 = s2 - ('A' - ':');
+    uint8_t h1, h2;
+    uint8_t s1, s2;
+    int i;
+    for (i = 0; i < len; i++)
+    {
+        h1 = source[2 * i];
+        h2 = source[2 * i + 1];
+        s1 = toupper(h1) - '0';
+        if (s1 > 9)
+            s1 = s1 - ('A' - ':');
+        s2 = toupper(h2) - '0';
+        if (s2 > 9)
+            s2 = s2 - ('A' - ':');
 
-		result[i] = s1 * 16 + s2;
-	}
+        result[i] = s1 * 16 + s2;
+    }
 }
 
 static void vli_clear(uint8_t *p_vli)
 {
-	unsigned int i;
-    for(i=0; i<NUM_ECC_DIGITS; ++i)
+    unsigned int i;
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         p_vli[i] = 0;
     }
@@ -62,10 +79,10 @@ static void vli_clear(uint8_t *p_vli)
 /* Returns 1 if p_vli == 0, 0 otherwise. */
 static int vli_isZero(uint8_t *p_vli)
 {
-	unsigned int i;
-    for(i = 0; i < NUM_ECC_DIGITS; ++i)
+    unsigned int i;
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        if(p_vli[i])
+        if (p_vli[i])
         {
             return 0;
         }
@@ -76,7 +93,7 @@ static int vli_isZero(uint8_t *p_vli)
 /* Returns nonzero if bit p_bit of p_vli is set. */
 static uint8_t vli_testBit(uint8_t *p_vli, unsigned int p_bit)
 {
-    return (p_vli[p_bit/8] & (1 << (p_bit % 8)));
+    return (p_vli[p_bit / 8] & (1 << (p_bit % 8)));
 }
 
 /* Counts the number of 8-bit "digits" in p_vli. */
@@ -85,7 +102,7 @@ static unsigned int vli_numDigits(uint8_t *p_vli)
     int i;
     /* Search from the end until we find a non-zero digit.
        We do it in reverse because we expect that most digits will be nonzero. */
-    for(i = NUM_ECC_DIGITS - 1; i >= 0 && p_vli[i] == 0; --i)
+    for (i = NUM_ECC_DIGITS - 1; i >= 0 && p_vli[i] == 0; --i)
     {
     }
 
@@ -95,17 +112,17 @@ static unsigned int vli_numDigits(uint8_t *p_vli)
 /* Counts the number of bits required for p_vli. */
 static unsigned int vli_numBits(uint8_t *p_vli)
 {
-	unsigned int i;
+    unsigned int i;
     uint8_t l_digit;
 
-	unsigned int l_numDigits = vli_numDigits(p_vli);
-    if(l_numDigits == 0)
+    unsigned int l_numDigits = vli_numDigits(p_vli);
+    if (l_numDigits == 0)
     {
         return 0;
     }
 
     l_digit = p_vli[l_numDigits - 1];
-    for(i=0; l_digit; ++i)
+    for (i = 0; l_digit; ++i)
     {
         l_digit >>= 1;
     }
@@ -116,8 +133,8 @@ static unsigned int vli_numBits(uint8_t *p_vli)
 /* Sets p_dest = p_src. */
 static void vli_set(uint8_t *p_dest, uint8_t *p_src)
 {
-	unsigned int i;
-    for(i=0; i<NUM_ECC_DIGITS; ++i)
+    unsigned int i;
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         p_dest[i] = p_src[i];
     }
@@ -127,13 +144,13 @@ static void vli_set(uint8_t *p_dest, uint8_t *p_src)
 static int vli_cmp(uint8_t *p_left, uint8_t *p_right)
 {
     int i;
-    for(i = NUM_ECC_DIGITS-1; i >= 0; --i)
+    for (i = NUM_ECC_DIGITS - 1; i >= 0; --i)
     {
-        if(p_left[i] > p_right[i])
+        if (p_left[i] > p_right[i])
         {
             return 1;
         }
-        else if(p_left[i] < p_right[i])
+        else if (p_left[i] < p_right[i])
         {
             return -1;
         }
@@ -145,8 +162,8 @@ static int vli_cmp(uint8_t *p_left, uint8_t *p_right)
 static uint8_t vli_lshift(uint8_t *p_result, uint8_t *p_in, unsigned int p_shift)
 {
     uint8_t l_carry = 0;
-	unsigned int i;
-    for(i = 0; i < NUM_ECC_DIGITS; ++i)
+    unsigned int i;
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         uint8_t l_temp = p_in[i];
         p_result[i] = (l_temp << p_shift) | l_carry;
@@ -163,7 +180,7 @@ static void vli_rshift1(uint8_t *p_vli)
     uint8_t l_carry = 0;
 
     p_vli += NUM_ECC_DIGITS;
-    while(p_vli-- > l_end)
+    while (p_vli-- > l_end)
     {
         uint8_t l_temp = *p_vli;
         *p_vli = (l_temp >> 1) | l_carry;
@@ -175,11 +192,11 @@ static void vli_rshift1(uint8_t *p_vli)
 static uint8_t vli_add(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
 {
     uint8_t l_carry = 0;
-	unsigned int i;
-    for(i=0; i<NUM_ECC_DIGITS; ++i)
+    unsigned int i;
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         uint8_t l_sum = p_left[i] + p_right[i] + l_carry;
-        if(l_sum != p_left[i])
+        if (l_sum != p_left[i])
         {
             l_carry = (l_sum < p_left[i]);
             //l_carry = (l_sum < p_left[i]) | ((l_sum == p_left[i]) && (l_carry));
@@ -193,11 +210,11 @@ static uint8_t vli_add(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
 static uint8_t vli_sub(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
 {
     uint8_t l_borrow = 0;
-	unsigned int i;
-    for(i=0; i<NUM_ECC_DIGITS; ++i)
+    unsigned int i;
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         uint8_t l_diff = p_left[i] - p_right[i] - l_borrow;
-        if(l_diff != p_left[i])
+        if (l_diff != p_left[i])
         {
             l_borrow = (l_diff > p_left[i]);
         }
@@ -212,15 +229,15 @@ static void vli_mult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
     uint16_t r01 = 0;
     uint8_t r2 = 0;
 
-	unsigned int i, k;
+    unsigned int i, k;
 
     /* Compute each digit of p_result in sequence, maintaining the carries. */
-    for(k=0; k < NUM_ECC_DIGITS*2 - 1; ++k)
+    for (k = 0; k < NUM_ECC_DIGITS * 2 - 1; ++k)
     {
-		unsigned int l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
-        for(i=l_min; i<=k && i<NUM_ECC_DIGITS; ++i)
+        unsigned int l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
+        for (i = l_min; i <= k && i < NUM_ECC_DIGITS; ++i)
         {
-            uint16_t l_product = (uint16_t)p_left[i] * p_right[k-i];
+            uint16_t l_product = (uint16_t)p_left[i] * p_right[k - i];
             r01 += l_product;
             r2 += (r01 < l_product);
         }
@@ -229,7 +246,7 @@ static void vli_mult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
         r2 = 0;
     }
 
-    p_result[NUM_ECC_DIGITS*2 - 1] = (uint8_t)r01;
+    p_result[NUM_ECC_DIGITS * 2 - 1] = (uint8_t)r01;
 }
 
 /* Computes p_result = (p_left + p_right) % p_mod.
@@ -237,7 +254,7 @@ static void vli_mult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
 static void vli_modAdd(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
 {
     uint8_t l_carry = vli_add(p_result, p_left, p_right);
-    if(l_carry || vli_cmp(p_result, p_mod) >= 0)
+    if (l_carry || vli_cmp(p_result, p_mod) >= 0)
     { /* p_result > p_mod (p_result = p_mod + remainder), so subtract p_mod to get remainder. */
         vli_sub(p_result, p_result, p_mod);
     }
@@ -248,14 +265,15 @@ static void vli_modAdd(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uin
 static void vli_modSub(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, uint8_t *p_mod)
 {
     uint8_t l_borrow = vli_sub(p_result, p_left, p_right);
-    if(l_borrow)
+    if (l_borrow)
     { /* In this case, p_result == -diff == (max int) - diff.
          Since -x % d == d - x, we can get the correct result from p_result + p_mod (with overflow). */
         vli_add(p_result, p_result, p_mod);
     }
 }
 
-static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product) {
+static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product)
+{
     uint8_t l_tmp1[NUM_ECC_DIGITS];
     uint8_t l_tmp2[NUM_ECC_DIGITS];
     uint8_t l_tmp3[NUM_ECC_DIGITS];
@@ -334,7 +352,7 @@ static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product) {
     l_carry -= vli_sub(p_result, p_result, l_tmp2);
 
     /* Y6 */
-    l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[16] = l_tmp1[20] = l_tmp1[24] = l_tmp1[28] = p_product[56]; 
+    l_tmp1[0] = l_tmp1[4] = l_tmp1[12] = l_tmp1[16] = l_tmp1[20] = l_tmp1[24] = l_tmp1[28] = p_product[56];
     l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[17] = l_tmp1[21] = l_tmp1[25] = l_tmp1[29] = p_product[57];
     l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[18] = l_tmp1[22] = l_tmp1[26] = l_tmp1[30] = p_product[58];
     l_tmp1[3] = l_tmp1[7] = l_tmp1[15] = l_tmp1[19] = l_tmp1[23] = l_tmp1[27] = l_tmp1[31] = p_product[59];
@@ -356,10 +374,10 @@ static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product) {
     l_tmp1[1] = l_tmp1[5] = l_tmp1[13] = l_tmp1[17] = l_tmp1[21] = l_tmp1[25] = l_tmp1[29] = p_product[61];
     l_tmp1[2] = l_tmp1[6] = l_tmp1[14] = l_tmp1[18] = l_tmp1[22] = l_tmp1[26] = l_tmp1[30] = p_product[62];
     l_tmp1[3] = l_tmp1[7] = l_tmp1[15] = l_tmp1[19] = l_tmp1[23] = l_tmp1[27] = l_tmp1[31] = p_product[63];
-    l_tmp3[0] = l_tmp3[4] = l_tmp3[20]  = p_product[60];
-    l_tmp3[1] = l_tmp3[5] = l_tmp3[21]  = p_product[61];
-    l_tmp3[2] = l_tmp3[6] = l_tmp3[22]  = p_product[62];
-    l_tmp3[3] = l_tmp3[7] = l_tmp3[23]  = p_product[63];
+    l_tmp3[0] = l_tmp3[4] = l_tmp3[20] = p_product[60];
+    l_tmp3[1] = l_tmp3[5] = l_tmp3[21] = p_product[61];
+    l_tmp3[2] = l_tmp3[6] = l_tmp3[22] = p_product[62];
+    l_tmp3[3] = l_tmp3[7] = l_tmp3[23] = p_product[63];
     l_tmp3[16] = l_tmp3[17] = l_tmp3[18] = l_tmp3[19] = l_tmp3[28] = l_tmp3[29] = l_tmp3[30] = l_tmp3[31] = 0;
     l_tmp2[28] = p_product[60];
     l_tmp2[29] = p_product[61];
@@ -371,16 +389,16 @@ static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product) {
     l_carry += vli_add(p_result, p_result, l_tmp3);
     l_carry += vli_add(p_result, p_result, l_tmp2);
 
-    if(l_carry < 0)
+    if (l_carry < 0)
     {
         do
         {
             l_carry += vli_add(p_result, p_result, curve_p);
-        } while(l_carry < 0);
+        } while (l_carry < 0);
     }
     else
     {
-        while(l_carry || vli_cmp(curve_p, p_result) != 1)
+        while (l_carry || vli_cmp(curve_p, p_result) != 1)
         {
             l_carry -= vli_sub(p_result, p_result, curve_p);
         }
@@ -390,9 +408,9 @@ static void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product) {
 /* Computes p_result = (p_left * p_right) % curve_p. */
 static void vli_modMult_fast(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right)
 {
-   uint8_t l_product[2 * NUM_ECC_DIGITS];
-   vli_mult(l_product, p_left, p_right);
-   vli_mmod_fast(p_result, l_product);
+    uint8_t l_product[2 * NUM_ECC_DIGITS];
+    vli_mult(l_product, p_left, p_right);
+    vli_mmod_fast(p_result, l_product);
 }
 
 #if ECC_SQUARE_FUNC
@@ -403,14 +421,14 @@ static void vli_square(uint8_t *p_result, uint8_t *p_left)
     uint16_t r01 = 0;
     uint8_t r2 = 0;
 
-	unsigned int i, k;
-    for(k=0; k < NUM_ECC_DIGITS*2 - 1; ++k)
+    unsigned int i, k;
+    for (k = 0; k < NUM_ECC_DIGITS * 2 - 1; ++k)
     {
-		unsigned int l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
-        for(i=l_min; i<=k && i<=k-i; ++i)
+        unsigned int l_min = (k < NUM_ECC_DIGITS ? 0 : (k + 1) - NUM_ECC_DIGITS);
+        for (i = l_min; i <= k && i <= k - i; ++i)
         {
-            uint16_t l_product = (uint16_t)p_left[i] * p_left[k-i];
-            if(i < k-i)
+            uint16_t l_product = (uint16_t)p_left[i] * p_left[k - i];
+            if (i < k - i)
             {
                 r2 += l_product >> 15;
                 l_product *= 2;
@@ -423,7 +441,7 @@ static void vli_square(uint8_t *p_result, uint8_t *p_left)
         r2 = 0;
     }
 
-    p_result[NUM_ECC_DIGITS*2 - 1] = (uint8_t)r01;
+    p_result[NUM_ECC_DIGITS * 2 - 1] = (uint8_t)r01;
 }
 
 /* Computes p_result = p_left^2 % curve_p. */
@@ -457,71 +475,71 @@ static void vli_modInv(uint8_t *p_result, uint8_t *p_input, uint8_t *p_mod)
     vli_clear(v);
 
     int l_cmpResult;
-    while((l_cmpResult = vli_cmp(a, b)) != 0)
+    while ((l_cmpResult = vli_cmp(a, b)) != 0)
     {
         l_carry = 0;
-        if(EVEN(a))
+        if (EVEN(a))
         {
             vli_rshift1(a);
-            if(!EVEN(u))
+            if (!EVEN(u))
             {
                 l_carry = vli_add(u, u, p_mod);
             }
             vli_rshift1(u);
-            if(l_carry)
+            if (l_carry)
             {
-                u[NUM_ECC_DIGITS-1] |= 0x80;
+                u[NUM_ECC_DIGITS - 1] |= 0x80;
             }
         }
-        else if(EVEN(b))
+        else if (EVEN(b))
         {
             vli_rshift1(b);
-            if(!EVEN(v))
+            if (!EVEN(v))
             {
                 l_carry = vli_add(v, v, p_mod);
             }
             vli_rshift1(v);
-            if(l_carry)
+            if (l_carry)
             {
-                v[NUM_ECC_DIGITS-1] |= 0x80;
+                v[NUM_ECC_DIGITS - 1] |= 0x80;
             }
         }
-        else if(l_cmpResult > 0)
+        else if (l_cmpResult > 0)
         {
             vli_sub(a, a, b);
             vli_rshift1(a);
-            if(vli_cmp(u, v) < 0)
+            if (vli_cmp(u, v) < 0)
             {
                 vli_add(u, u, p_mod);
             }
             vli_sub(u, u, v);
-            if(!EVEN(u))
+            if (!EVEN(u))
             {
                 l_carry = vli_add(u, u, p_mod);
             }
             vli_rshift1(u);
-            if(l_carry)
+            if (l_carry)
             {
-                u[NUM_ECC_DIGITS-1] |= 0x80;
+                u[NUM_ECC_DIGITS - 1] |= 0x80;
             }
         }
         else
         {
             vli_sub(b, b, a);
             vli_rshift1(b);
-            if(vli_cmp(v, u) < 0)
+            if (vli_cmp(v, u) < 0)
             {
                 vli_add(v, v, p_mod);
             }
             vli_sub(v, v, u);
-            if(!EVEN(v))
+            if (!EVEN(v))
             {
                 l_carry = vli_add(v, v, p_mod);
             }
             vli_rshift1(v);
-            if(l_carry)
+            if (l_carry)
             {
-                v[NUM_ECC_DIGITS-1] |= 0x80;
+                v[NUM_ECC_DIGITS - 1] |= 0x80;
             }
         }
     }
@@ -548,7 +566,7 @@ static void EccPoint_double_jacobian(uint8_t *X1, uint8_t *Y1, uint8_t *Z1)
     uint8_t t4[NUM_ECC_DIGITS];
     uint8_t t5[NUM_ECC_DIGITS];
 
-    if(vli_isZero(Z1))
+    if (vli_isZero(Z1))
     {
         return;
     }
@@ -566,17 +584,17 @@ static void EccPoint_double_jacobian(uint8_t *X1, uint8_t *Y1, uint8_t *Z1)
 
     vli_modAdd(Z1, X1, X1, curve_p); /* t3 = 2*(x1^2 - z1^4) */
     vli_modAdd(X1, X1, Z1, curve_p); /* t1 = 3*(x1^2 - z1^4) */
-    if(vli_testBit(X1, 0))
+    if (vli_testBit(X1, 0))
     {
         uint8_t l_carry = vli_add(X1, X1, curve_p);
         vli_rshift1(X1);
-        X1[NUM_ECC_DIGITS-1] |= l_carry << 7;
+        X1[NUM_ECC_DIGITS - 1] |= l_carry << 7;
     }
     else
     {
         vli_rshift1(X1);
     }
-                     /* t1 = 3/2*(x1^2 - z1^4) = B */
+    /* t1 = 3/2*(x1^2 - z1^4) = B */
 
     vli_modSquare_fast(Z1, X1);      /* t3 = B^2 */
     vli_modSub(Z1, Z1, t5, curve_p); /* t3 = B^2 - A */
@@ -611,7 +629,7 @@ static void XYcZ_initial_double(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *
 
     vli_clear(z);
     z[0] = 1;
-    if(p_initialZ)
+    if (p_initialZ)
     {
         vli_set(z, p_initialZ);
     }
@@ -632,8 +650,8 @@ static void XYcZ_add(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
     /* t1 = X1, t2 = Y1, t3 = X2, t4 = Y2 */
     uint8_t t5[NUM_ECC_DIGITS];
 
-//X3 = D ? (B + C) ; Y3 = (Y2 ? Y1)(B ? X3) ? E and Z3 = Z(X2 ? X1) 
-//A = (X2 ? X1)2, B = X1A, C = X2A, D = (Y2 ? Y1)2 and E = Y1(C ? B)
+    //X3 = D ? (B + C) ; Y3 = (Y2 ? Y1)(B ? X3) ? E and Z3 = Z(X2 ? X1)
+    //A = (X2 ? X1)2, B = X1A, C = X2A, D = (Y2 ? Y1)2 and E = Y1(C ? B)
 
     vli_modSub(t5, X2, X1, curve_p); /* t5 = x2 - x1 */
     vli_modSquare_fast(t5, t5);      /* t5 = (x2 - x1)^2 = A */
@@ -642,7 +660,7 @@ static void XYcZ_add(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
     vli_modSub(Y2, Y2, Y1, curve_p); /* Y2 = t4 = y2 - y1 */
     vli_modSquare_fast(t5, Y2);      /* t5 = (y2 - y1)^2 = D */
 
-//X3 = D ? (B + C)
+    //X3 = D ? (B + C)
     vli_modSub(t5, t5, X1, curve_p); /* t5 = D - B */
     vli_modSub(t5, t5, X2, curve_p); /* t5 = D - B - C = x3 */
 
@@ -650,10 +668,10 @@ static void XYcZ_add(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
     vli_modMult_fast(Y1, Y1, X2);    /* Y1 = t2 = y1*(C - B) = E*/
     vli_modSub(X2, X1, t5, curve_p); /* X2 = t3 = B - x3 */
     vli_modMult_fast(Y2, Y2, X2);    /* Y2 = t4 = (y2 - y1)*(B - x3) */
-//y2=y3
+                                     //y2=y3
     vli_modSub(Y2, Y2, Y1, curve_p); /* Y2 = t4 = y3 */
 
-//x2=t5=x3
+    //x2=t5=x3
     vli_set(X2, t5);
 }
 
@@ -669,40 +687,40 @@ static void XYcZ_addC(uint8_t *X1, uint8_t *Y1, uint8_t *X2, uint8_t *Y2)
     uint8_t t6[NUM_ECC_DIGITS];
     uint8_t t7[NUM_ECC_DIGITS];
 
-//s1
+    //s1
     vli_modSub(t5, X2, X1, curve_p); /* t5 = x2 - x1 */
     vli_modSquare_fast(t5, t5);      /* t5 = (x2 - x1)^2 = A */
-//s2
+                                     //s2
     vli_modMult_fast(X1, X1, t5);    /* X1 = t1 = x1*A = B */
-//s3
+                                     //s3
     vli_modMult_fast(X2, X2, t5);    /* X2 = t3 = x2*A = C */
 
-//s4
+    //s4
     vli_modAdd(t5, Y2, Y1, curve_p); /* t5 = t4 = y2 + y1 */
     vli_modSub(Y2, Y2, Y1, curve_p); /* Y2 = t4 = y2 - y1 */
 
-//s5 :E = Y1(C ? B)
+    //s5 :E = Y1(C ? B)
     vli_modSub(t6, X2, X1, curve_p); /* t6 = C - B */
     vli_modMult_fast(Y1, Y1, t6);    /* t2 = y1 * (C - B) */
-//s6 :B + C
+                                     //s6 :B + C
     vli_modAdd(t6, X1, X2, curve_p); /* t6 = B + C */
-//s4:D=(Y2 ? Y1)^2
+                                     //s4:D=(Y2 ? Y1)^2
     vli_modSquare_fast(X2, Y2);      /* X2 = t3 = (y2 - y1)^2 */
-//s6:X3=D ? (B + C)
+                                     //s6:X3=D ? (B + C)
     vli_modSub(X2, X2, t6, curve_p); /* X2 = t3 = x3 */
 
-//s7:Y3 = (Y2 ? Y1)(B ? X3) ? E
+    //s7:Y3 = (Y2 ? Y1)(B ? X3) ? E
     vli_modSub(t7, X1, X2, curve_p); /* t7 = B - x3 */
     vli_modMult_fast(Y2, Y2, t7);    /* t4 = (y2 - y1)*(B - x3) */
     vli_modSub(Y2, Y2, Y1, curve_p); /* t4 = y3 */
 
-//s4
-    vli_modSquare_fast(t7, t5);      /* t7 = (y2 + y1)^2 = F */
+    //s4
+    vli_modSquare_fast(t7, t5); /* t7 = (y2 + y1)^2 = F */
 
-//s8:F-(B+C)
+    //s8:F-(B+C)
     vli_modSub(t7, t7, t6, curve_p); /* t7 = x3' */
 
-//s9
+    //s9
     vli_modSub(t6, t7, X1, curve_p); /* t6 = x3' - B */
     vli_modMult_fast(t6, t6, t5);    /* t6 = (y2 + y1)*(x3' - B) */
     vli_modSub(Y1, t6, Y1, curve_p); /* t2 = y3' */
@@ -717,33 +735,33 @@ static void EccPoint_mult(EccPoint *p_result, EccPoint *p_point, uint8_t *p_scal
     uint8_t Ry[2][NUM_ECC_DIGITS];
     uint8_t z[NUM_ECC_DIGITS];
 
-	unsigned int i, nb;
+    unsigned int i, nb;
 
     vli_set(Rx[1], p_point->x);
     vli_set(Ry[1], p_point->y);
 
     XYcZ_initial_double(Rx[1], Ry[1], Rx[0], Ry[0], p_initialZ);
 
-    for(i = vli_numBits(p_scalar) - 2; i > 0; --i)
+    for (i = vli_numBits(p_scalar) - 2; i > 0; --i)
     {
         nb = !vli_testBit(p_scalar, i);
-        XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
-        XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+        XYcZ_addC(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
+        XYcZ_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
     }
 
     nb = !vli_testBit(p_scalar, 0);
-    XYcZ_addC(Rx[1-nb], Ry[1-nb], Rx[nb], Ry[nb]);
+    XYcZ_addC(Rx[1 - nb], Ry[1 - nb], Rx[nb], Ry[nb]);
 
     /* Find final 1/Z value. */
     vli_modSub(z, Rx[1], Rx[0], curve_p); /* X1 - X0 */
-    vli_modMult_fast(z, z, Ry[1-nb]);     /* Yb * (X1 - X0) */
+    vli_modMult_fast(z, z, Ry[1 - nb]);   /* Yb * (X1 - X0) */
     vli_modMult_fast(z, z, p_point->x);   /* xP * Yb * (X1 - X0) */
     vli_modInv(z, z, curve_p);            /* 1 / (xP * Yb * (X1 - X0)) */
     vli_modMult_fast(z, z, p_point->y);   /* yP / (xP * Yb * (X1 - X0)) */
-    vli_modMult_fast(z, z, Rx[1-nb]);     /* Xb * yP / (xP * Yb * (X1 - X0)) */
+    vli_modMult_fast(z, z, Rx[1 - nb]);   /* Xb * yP / (xP * Yb * (X1 - X0)) */
     /* End 1/Z calculation */
 
-    XYcZ_add(Rx[nb], Ry[nb], Rx[1-nb], Ry[1-nb]);
+    XYcZ_add(Rx[nb], Ry[nb], Rx[1 - nb], Ry[1 - nb]);
 
     apply_z(Rx[0], Ry[0], z);
 
@@ -756,12 +774,12 @@ int ecc_make_key(EccPoint *p_publicKey, uint8_t p_privateKey[NUM_ECC_DIGITS], ui
     /* Make sure the private key is in the range [1, n-1].
        For the supported curves, n is always large enough that we only need to subtract once at most. */
     vli_set(p_privateKey, p_random);
-    if(vli_cmp(curve_n, p_privateKey) != 1)
+    if (vli_cmp(curve_n, p_privateKey) != 1)
     {
         vli_sub(p_privateKey, p_privateKey, curve_n);
     }
 
-    if(vli_isZero(p_privateKey))
+    if (vli_isZero(p_privateKey))
     {
         return 0; /* The private key cannot be 0 (mod p). */
     }
@@ -777,24 +795,24 @@ int ecc_valid_public_key(EccPoint *p_publicKey)
     uint8_t l_tmp1[NUM_ECC_DIGITS];
     uint8_t l_tmp2[NUM_ECC_DIGITS];
 
-    if(EccPoint_isZero(p_publicKey))
+    if (EccPoint_isZero(p_publicKey))
     {
         return 0;
     }
 
-    if(vli_cmp(curve_p, p_publicKey->x) != 1 || vli_cmp(curve_p, p_publicKey->y) != 1)
+    if (vli_cmp(curve_p, p_publicKey->x) != 1 || vli_cmp(curve_p, p_publicKey->y) != 1)
     {
         return 0;
     }
 
-    vli_modSquare_fast(l_tmp1, p_publicKey->y); /* tmp1 = y^2 */
-    vli_modSquare_fast(l_tmp2, p_publicKey->x); /* tmp2 = x^2 */
-    vli_modSub(l_tmp2, l_tmp2, na, curve_p);  /* tmp2 = x^2 + a = x^2 - 3 */
+    vli_modSquare_fast(l_tmp1, p_publicKey->y);       /* tmp1 = y^2 */
+    vli_modSquare_fast(l_tmp2, p_publicKey->x);       /* tmp2 = x^2 */
+    vli_modSub(l_tmp2, l_tmp2, na, curve_p);          /* tmp2 = x^2 + a = x^2 - 3 */
     vli_modMult_fast(l_tmp2, l_tmp2, p_publicKey->x); /* tmp2 = x^3 + ax */
-    vli_modAdd(l_tmp2, l_tmp2, curve_b, curve_p); /* tmp2 = x^3 + ax + b */
+    vli_modAdd(l_tmp2, l_tmp2, curve_b, curve_p);     /* tmp2 = x^3 + ax + b */
 
     /* Make sure that y^2 == x^3 + ax + b */
-    if(vli_cmp(l_tmp1, l_tmp2) != 0)
+    if (vli_cmp(l_tmp1, l_tmp2) != 0)
     {
         return 0;
     }
@@ -807,7 +825,7 @@ int ecdh_shared_secret(uint8_t p_secret[NUM_ECC_DIGITS], EccPoint *p_publicKey, 
     EccPoint l_product;
 
     EccPoint_mult(&l_product, p_publicKey, p_privateKey, p_random);
-    if(EccPoint_isZero(&l_product))
+    if (EccPoint_isZero(&l_product))
     {
         return 0;
     }
@@ -824,7 +842,7 @@ extern void sm3(unsigned char *input, int ilen, unsigned char output[32]);
 
 int sm2_get_e(char *IDa, int IDLen, unsigned char *xa, unsigned char *ya, unsigned char *plaintext, unsigned int plainLen, unsigned char *e)
 {
-#define SM3_OUTSIZE     32
+#define SM3_OUTSIZE 32
 
     unsigned char Za[64];
     unsigned char *M;
@@ -856,34 +874,30 @@ int sm2_get_z(unsigned char *IDa, int IDLen, unsigned char *xa, unsigned char *y
     unsigned char Z[256];
     unsigned char *p = Z;
     unsigned int len = 0;
-    
-    unsigned char a[] = { 
-    0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-    0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
-    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC 
-    };
 
-    unsigned char b[] = { 
-    0x28, 0xE9, 0xFA, 0x9E, 0x9D, 0x9F, 0x5E, 0x34,
-    0x4D, 0x5A, 0x9E, 0x4B, 0xCF, 0x65, 0x09, 0xA7,
-    0xF3, 0x97, 0x89, 0xF5, 0x15, 0xAB, 0x8F, 0x92,
-    0xDD, 0xBC, 0xBD, 0x41, 0x4D, 0x94, 0x0E, 0x93 
-    };
+    unsigned char a[] = {
+        0xFF, 0xFF, 0xFF, 0xFE, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0x00, 0x00, 0x00, 0x00,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFC};
 
-    unsigned char xG[] = { 
-    0x32, 0xC4, 0xAE, 0x2C, 0x1F, 0x19, 0x81, 0x19,
-    0x5F, 0x99, 0x04, 0x46, 0x6A, 0x39, 0xC9, 0x94,
-    0x8F, 0xE3, 0x0B, 0xBF, 0xF2, 0x66, 0x0B, 0xE1,
-    0x71, 0x5A, 0x45, 0x89, 0x33, 0x4C, 0x74, 0xC7 
-    };
+    unsigned char b[] = {
+        0x28, 0xE9, 0xFA, 0x9E, 0x9D, 0x9F, 0x5E, 0x34,
+        0x4D, 0x5A, 0x9E, 0x4B, 0xCF, 0x65, 0x09, 0xA7,
+        0xF3, 0x97, 0x89, 0xF5, 0x15, 0xAB, 0x8F, 0x92,
+        0xDD, 0xBC, 0xBD, 0x41, 0x4D, 0x94, 0x0E, 0x93};
 
-    unsigned char yG[] = { 
-    0xBC, 0x37, 0x36, 0xA2, 0xF4, 0xF6, 0x77, 0x9C,
-    0x59, 0xBD, 0xCE, 0xE3, 0x6B, 0x69, 0x21, 0x53,
-    0xD0, 0xA9, 0x87, 0x7C, 0xC6, 0x2A, 0x47, 0x40,
-    0x02, 0xDF, 0x32, 0xE5, 0x21, 0x39, 0xF0, 0xA0 
-    };
+    unsigned char xG[] = {
+        0x32, 0xC4, 0xAE, 0x2C, 0x1F, 0x19, 0x81, 0x19,
+        0x5F, 0x99, 0x04, 0x46, 0x6A, 0x39, 0xC9, 0x94,
+        0x8F, 0xE3, 0x0B, 0xBF, 0xF2, 0x66, 0x0B, 0xE1,
+        0x71, 0x5A, 0x45, 0x89, 0x33, 0x4C, 0x74, 0xC7};
+
+    unsigned char yG[] = {
+        0xBC, 0x37, 0x36, 0xA2, 0xF4, 0xF6, 0x77, 0x9C,
+        0x59, 0xBD, 0xCE, 0xE3, 0x6B, 0x69, 0x21, 0x53,
+        0xD0, 0xA9, 0x87, 0x7C, 0xC6, 0x2A, 0x47, 0x40,
+        0x02, 0xDF, 0x32, 0xE5, 0x21, 0x39, 0xF0, 0xA0};
 
     unsigned short idBitLen = IDLen * 8;
 
@@ -900,11 +914,11 @@ int sm2_get_z(unsigned char *IDa, int IDLen, unsigned char *xa, unsigned char *y
     len += IDLen;
 
     memcpy(p, a, sizeof(a));
-    p += sizeof(a);    
+    p += sizeof(a);
     len += sizeof(a);
 
     memcpy(p, b, sizeof(b));
-    p += sizeof(b);    
+    p += sizeof(b);
     len += sizeof(b);
 
     memcpy(p, xG, sizeof(xG));
@@ -936,13 +950,13 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
 {
     uint8_t l_product[2 * NUM_ECC_DIGITS];
     uint8_t l_modMultiple[2 * NUM_ECC_DIGITS];
-	unsigned int l_digitShift, l_bitShift;
-	unsigned int l_productBits;
-	unsigned int l_modBits = vli_numBits(p_mod);
-    
+    unsigned int l_digitShift, l_bitShift;
+    unsigned int l_productBits;
+    unsigned int l_modBits = vli_numBits(p_mod);
+
     vli_mult(l_product, p_left, p_right);
     l_productBits = vli_numBits(l_product + NUM_ECC_DIGITS);
-    if(l_productBits)
+    if (l_productBits)
     {
         l_productBits += NUM_ECC_DIGITS * 8;
     }
@@ -950,20 +964,20 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
     {
         l_productBits = vli_numBits(l_product);
     }
-    
-    if(l_productBits < l_modBits)
+
+    if (l_productBits < l_modBits)
     { /* l_product < p_mod. */
         vli_set(p_result, l_product);
         return;
     }
-    
+
     /* Shift p_mod by (l_leftBits - l_modBits). This multiplies p_mod by the largest
        power of two possible while still resulting in a number less than p_left. */
     vli_clear(l_modMultiple);
     vli_clear(l_modMultiple + NUM_ECC_DIGITS);
     l_digitShift = (l_productBits - l_modBits) / 8;
     l_bitShift = (l_productBits - l_modBits) % 8;
-    if(l_bitShift)
+    if (l_bitShift)
     {
         l_modMultiple[l_digitShift + NUM_ECC_DIGITS] = vli_lshift(l_modMultiple + l_digitShift, p_mod, l_bitShift);
     }
@@ -975,12 +989,12 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
     /* Subtract all multiples of p_mod to get the remainder. */
     vli_clear(p_result);
     p_result[0] = 1; /* Use p_result as a temp var to store 1 (for subtraction) */
-    while(l_productBits > NUM_ECC_DIGITS * 8 || vli_cmp(l_modMultiple, p_mod) >= 0)
+    while (l_productBits > NUM_ECC_DIGITS * 8 || vli_cmp(l_modMultiple, p_mod) >= 0)
     {
         int l_cmp = vli_cmp(l_modMultiple + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS);
-        if(l_cmp < 0 || (l_cmp == 0 && vli_cmp(l_modMultiple, l_product) <= 0))
+        if (l_cmp < 0 || (l_cmp == 0 && vli_cmp(l_modMultiple, l_product) <= 0))
         {
-            if(vli_sub(l_product, l_product, l_modMultiple))
+            if (vli_sub(l_product, l_product, l_modMultiple))
             { /* borrow */
                 vli_sub(l_product + NUM_ECC_DIGITS, l_product + NUM_ECC_DIGITS, p_result);
             }
@@ -989,8 +1003,8 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
         uint8_t l_carry = (l_modMultiple[NUM_ECC_DIGITS] & 0x01) << 7;
         vli_rshift1(l_modMultiple + NUM_ECC_DIGITS);
         vli_rshift1(l_modMultiple);
-        l_modMultiple[NUM_ECC_DIGITS-1] |= l_carry;
-        
+        l_modMultiple[NUM_ECC_DIGITS - 1] |= l_carry;
+
         --l_productBits;
     }
     vli_set(p_result, l_product);
@@ -998,51 +1012,51 @@ static void vli_modMult(uint8_t *p_result, uint8_t *p_left, uint8_t *p_right, ui
 
 //static unsigned int max(unsigned int a, unsigned int b)
 //{
-//    return (a > b ? a : b);
+//   return (a > b ? a : b);
 //}
 
 //************ DSA Sign with SM2 ************//
-//int ecdsa_sign(uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS], uint8_t p_privateKey[NUM_ECC_DIGITS],
-//    uint8_t p_random[NUM_ECC_DIGITS], uint8_t p_hash[NUM_ECC_DIGITS])
-//{
-//    uint8_t k[NUM_ECC_DIGITS];
-//    EccPoint p;
-//    
-//    if(vli_isZero(p_random))
-//    { /* The random number must not be 0. */
-//        return 0;
-//    }
-//    
-//    vli_set(k, p_random);
-//    if(vli_cmp(curve_n, k) != 1)
-//    {
-//        vli_sub(k, k, curve_n);
-//    }
-//    
-//    /* tmp = k * G */
-//    EccPoint_mult(&p, &curve_G, k, NULL);
-//    
-//    /* r = x1 + e (mod n) */
-//    vli_set(r, p.x);
-//    vli_modAdd(r, r, p_hash, curve_n);
-//    if(vli_cmp(curve_n, r) != 1)
-//    {
-//        vli_sub(r, r, curve_n);
-//    }
-//    if(vli_isZero(r))
-//    { /* If r == 0, fail (need a different random number). */
-//        return 0;
-//    }
-//    
-//    vli_modMult(s, r, p_privateKey, curve_n); /* s = r*d */
-//    vli_modSub(s, k, s, curve_n); /* k-r*d */
-//    uint8_t one[NUM_ECC_DIGITS] = {1};
-//    vli_modAdd(p_privateKey, p_privateKey, one, curve_n); /* 1+d */
-//    vli_modInv(p_privateKey, p_privateKey, curve_n); /* (1+d)' */
-//    vli_modMult(s, p_privateKey, s, curve_n); /* (1+d)'*(k-r*d) */
-//    
-//    return 1;
-//}
+int ecdsa_sign(uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS], uint8_t p_privateKey[NUM_ECC_DIGITS],
+               uint8_t p_random[NUM_ECC_DIGITS], uint8_t p_hash[NUM_ECC_DIGITS])
+{
+    uint8_t k[NUM_ECC_DIGITS];
+    EccPoint p;
+
+    if (vli_isZero(p_random))
+    { /* The random number must not be 0. */
+        return 0;
+    }
+
+    vli_set(k, p_random);
+    if (vli_cmp(curve_n, k) != 1)
+    {
+        vli_sub(k, k, curve_n);
+    }
+
+    /* tmp = k * G */
+    EccPoint_mult(&p, &curve_G, k, NULL);
+
+    /* r = x1 + e (mod n) */
+    vli_set(r, p.x);
+    vli_modAdd(r, r, p_hash, curve_n);
+    if (vli_cmp(curve_n, r) != 1)
+    {
+        vli_sub(r, r, curve_n);
+    }
+    if (vli_isZero(r))
+    { /* If r == 0, fail (need a different random number). */
+        return 0;
+    }
+
+    vli_modMult(s, r, p_privateKey, curve_n); /* s = r*d */
+    vli_modSub(s, k, s, curve_n);             /* k-r*d */
+    uint8_t one[NUM_ECC_DIGITS] = {1};
+    vli_modAdd(p_privateKey, p_privateKey, one, curve_n); /* 1+d */
+    vli_modInv(p_privateKey, p_privateKey, curve_n);      /* (1+d)' */
+    vli_modMult(s, p_privateKey, s, curve_n);             /* (1+d)'*(k-r*d) */
+
+    return 1;
+}
 
 /************ DSA Verify with SM2 ************/
 int ecdsa_verify(EccPoint *p_publicKey, uint8_t p_hash[NUM_ECC_DIGITS], uint8_t r[NUM_ECC_DIGITS], uint8_t s[NUM_ECC_DIGITS])
@@ -1055,20 +1069,21 @@ int ecdsa_verify(EccPoint *p_publicKey, uint8_t p_hash[NUM_ECC_DIGITS], uint8_t 
     uint8_t ty[NUM_ECC_DIGITS];
 
     uint8_t tz[NUM_ECC_DIGITS];
-    
-    if(vli_isZero(r) || vli_isZero(s))
+
+    if (vli_isZero(r) || vli_isZero(s))
     { /* r, s must not be 0. */
         return 0;
     }
 
-    if(vli_cmp(curve_n, r) != 1 || vli_cmp(curve_n, s) != 1)
+    if (vli_cmp(curve_n, r) != 1 || vli_cmp(curve_n, s) != 1)
     { /* r, s must be < n. */
         return 0;
     }
 
     uint8_t t[NUM_ECC_DIGITS];
     vli_modAdd(t, r, s, curve_n); // r + s
-    if (t == 0) return 0;
+    if (t == 0)
+        return 0;
 
     //sG + tPa
     /* Calculate l_sum = G + Q. */
@@ -1078,27 +1093,27 @@ int ecdsa_verify(EccPoint *p_publicKey, uint8_t p_hash[NUM_ECC_DIGITS], uint8_t 
     vli_set(ty, curve_G.y);
     vli_modSub(z, l_sum.x, tx, curve_p); /* Z = x2 - x1 */
     XYcZ_add(tx, ty, l_sum.x, l_sum.y);
-    vli_modInv(z, z, curve_p); /* Z = 1/Z */
-    apply_z(l_sum.x, l_sum.y, z);//l_sum.x/Z^2, l_sum.y/Z^3
-    
+    vli_modInv(z, z, curve_p);    /* Z = 1/Z */
+    apply_z(l_sum.x, l_sum.y, z); //l_sum.x/Z^2, l_sum.y/Z^3
+
     /* Use Shamir's trick to calculate u1*G + u2*Q */
     EccPoint *l_points[4] = {NULL, &curve_G, p_publicKey, &l_sum};
     uint l_numBits = max(vli_numBits(s), vli_numBits(t));
-    
-    EccPoint *l_point = l_points[(!!vli_testBit(s, l_numBits-1)) | ((!!vli_testBit(t, l_numBits-1)) << 1)];
+
+    EccPoint *l_point = l_points[(!!vli_testBit(s, l_numBits - 1)) | ((!!vli_testBit(t, l_numBits - 1)) << 1)];
     vli_set(rx, l_point->x);
     vli_set(ry, l_point->y);
     vli_clear(z);
     z[0] = 1;
 
     int i;
-    for(i = l_numBits - 2; i >= 0; --i)
+    for (i = l_numBits - 2; i >= 0; --i)
     {
         EccPoint_double_jacobian(rx, ry, z);
-        
+
         int l_index = (!!vli_testBit(s, i)) | ((!!vli_testBit(t, i)) << 1);
         EccPoint *l_point = l_points[l_index];
-        if(l_point)
+        if (l_point)
         {
             vli_set(tx, l_point->x);
             vli_set(ty, l_point->y);
@@ -1111,11 +1126,11 @@ int ecdsa_verify(EccPoint *p_publicKey, uint8_t p_hash[NUM_ECC_DIGITS], uint8_t 
 
     vli_modInv(z, z, curve_p); /* Z = 1/Z */
     apply_z(rx, ry, z);
-    
+
     /* v = x1 + e (mod n) */
     vli_modAdd(rx, rx, p_hash, curve_n);
 
-    if(vli_cmp(curve_n, rx) != 1)
+    if (vli_cmp(curve_n, rx) != 1)
     {
         vli_sub(rx, rx, curve_n);
     }
@@ -1130,58 +1145,58 @@ int sm2_sign(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, uint
     int i = 0;
     int ret = 0;
     uint8_t tmp = 0;
-    uint8_t br[NUM_ECC_DIGITS];//r
-    uint8_t bs[NUM_ECC_DIGITS];//s
-    uint8_t p_pvk[NUM_ECC_DIGITS];//p_pvk
-    uint8_t p_rnd[NUM_ECC_DIGITS];//p_rand
+    uint8_t br[NUM_ECC_DIGITS];    //r
+    uint8_t bs[NUM_ECC_DIGITS];    //s
+    uint8_t p_pvk[NUM_ECC_DIGITS]; //p_pvk
+    uint8_t p_rnd[NUM_ECC_DIGITS]; //p_rand
     uint8_t e_hash[NUM_ECC_DIGITS];
     EccPoint p_publicKey, p_pubk;
 
-    for (i=0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
-        p_pvk[i] = p_privateKey[NUM_ECC_DIGITS - 1 -i];
-        p_rnd[i] = p_random[NUM_ECC_DIGITS - 1 -i];
+        p_pvk[i] = p_privateKey[NUM_ECC_DIGITS - 1 - i];
+        p_rnd[i] = p_random[NUM_ECC_DIGITS - 1 - i];
     }
 
     EccPoint_mult(&p_publicKey, &curve_G, p_pvk, NULL);
 
-    for (i=0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
-        p_pubk.x[i] = p_publicKey.x[NUM_ECC_DIGITS - 1 -i];
-        p_pubk.y[i] = p_publicKey.y[NUM_ECC_DIGITS - 1 -i];
+        p_pubk.x[i] = p_publicKey.x[NUM_ECC_DIGITS - 1 - i];
+        p_pubk.y[i] = p_publicKey.y[NUM_ECC_DIGITS - 1 - i];
     }
 
 #ifdef __SM2_DEBUG__
     printf("\n-revert-p_rnd:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_rnd[i]);
     }
     printf("\n");
 
     printf("\n-normal-p_pubkx:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_pubk.x[i]);
     }
     printf("\n");
 
     printf("\n-normal-p_pubky:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_pubk.y[i]);
     }
     printf("\n");
 
     printf("\n-msg:");
-    for (i = 0; i<msg_len; i++)
+    for (i = 0; i < msg_len; i++)
     {
         printf("%02X", msg[i]);
     }
     printf("\n");
 
     printf("\nIDa:");
-    for (i = 0; i<IDa_len; i++)
+    for (i = 0; i < IDa_len; i++)
     {
         printf("%02X", IDa[i]);
     }
@@ -1191,15 +1206,15 @@ int sm2_sign(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, uint
     //��������eֵ
     sm2_get_e(IDa, IDa_len, p_pubk.x, p_pubk.y, msg, msg_len, e_hash);
 
-    for (i=0; i<NUM_ECC_DIGITS/2; i++)
+    for (i = 0; i < NUM_ECC_DIGITS / 2; i++)
     {
         tmp = e_hash[i];
-        e_hash[i] = e_hash[NUM_ECC_DIGITS - 1 -i];
-        e_hash[NUM_ECC_DIGITS - 1 -i] = tmp;
+        e_hash[i] = e_hash[NUM_ECC_DIGITS - 1 - i];
+        e_hash[NUM_ECC_DIGITS - 1 - i] = tmp;
     }
 #ifdef __SM2_DEBUG__
     printf("\nrevert p_hash:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", e_hash[i]);
     }
@@ -1212,10 +1227,10 @@ int sm2_sign(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, uint
         return 0;
     }
 
-    for (i=0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
-        sig->r[i] = br[NUM_ECC_DIGITS - 1 -i];
-        sig->s[i] = bs[NUM_ECC_DIGITS - 1 -i];
+        sig->r[i] = br[NUM_ECC_DIGITS - 1 - i];
+        sig->s[i] = bs[NUM_ECC_DIGITS - 1 - i];
     }
 
     return 1;
@@ -1224,10 +1239,10 @@ int sm2_sign(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, uint
 int sm2_verify(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, uint8_t IDa_len, EccPoint *p_pubk)
 {
     int i = 0;
-    uint8_t br[NUM_ECC_DIGITS];//r
-    uint8_t bs[NUM_ECC_DIGITS];//s
-    uint8_t p_pvk[NUM_ECC_DIGITS];//p_pvk
-    uint8_t p_rnd[NUM_ECC_DIGITS];//p_rand
+    uint8_t br[NUM_ECC_DIGITS];    //r
+    uint8_t bs[NUM_ECC_DIGITS];    //s
+    uint8_t p_pvk[NUM_ECC_DIGITS]; //p_pvk
+    uint8_t p_rnd[NUM_ECC_DIGITS]; //p_rand
     uint8_t e_hash[NUM_ECC_DIGITS];
     uint8_t p_hash[NUM_ECC_DIGITS];
 
@@ -1236,7 +1251,7 @@ int sm2_verify(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, ui
     //��������eֵ
     sm2_get_e(IDa, IDa_len, p_pubk->x, p_pubk->y, msg, msg_len, e_hash);
 
-    for (i=0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         br[i] = sig->r[NUM_ECC_DIGITS - 1 - i];
         bs[i] = sig->s[NUM_ECC_DIGITS - 1 - i];
@@ -1246,37 +1261,35 @@ int sm2_verify(EccSig *sig, uint8_t *msg, unsigned int msg_len, uint8_t *IDa, ui
     }
 #ifdef __SM2_DEBUG__
     printf("\nbr:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", br[i]);
     }
     printf("\n");
 
     printf("\nbs:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", bs[i]);
     }
     printf("\n");
 
-    
     printf("\n-revert-p_pubkx:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_publicKey.x[i]);
     }
     printf("\n");
 
-    
     printf("\n-revert-p_pubky:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_publicKey.y[i]);
     }
     printf("\n");
 
     printf("\nsm2_verify revert p_hash:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_hash[i]);
     }
@@ -1291,14 +1304,14 @@ int EccPoint_is_on_curve(EccPoint C1)
     uint8_t x[NUM_ECC_DIGITS];
     uint8_t y[NUM_ECC_DIGITS];
 
-    vli_modSquare_fast(y, C1.y); /* tmp1 = y^2 */
-    vli_modSquare_fast(x, C1.x); /* tmp2 = x^2 */
-    vli_modAdd(x, x, curve_a, curve_p);  /* tmp2 = x^2 + a */
-    vli_modMult_fast(x, x, C1.x); /* tmp2 = x^3 + ax */
+    vli_modSquare_fast(y, C1.y);        /* tmp1 = y^2 */
+    vli_modSquare_fast(x, C1.x);        /* tmp2 = x^2 */
+    vli_modAdd(x, x, curve_a, curve_p); /* tmp2 = x^2 + a */
+    vli_modMult_fast(x, x, C1.x);       /* tmp2 = x^3 + ax */
     vli_modAdd(x, x, curve_b, curve_p); /* tmp2 = x^3 + ax + b */
 
     /* Make sure that y^2 == x^3 + ax + b */
-    if(vli_cmp(y, x) != 0)
+    if (vli_cmp(y, x) != 0)
     {
         printf("not on curve: y^2 == x^3 + ax + b\n");
         return 0;
@@ -1319,19 +1332,25 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     EccPoint point2_revert;
 
     uint8_t x2y2[NUM_ECC_DIGITS * 2];
-	uint8_t C2[65535] = {0};
+    uint8_t C2[65535] = {0};
     uint8_t C3[NUM_ECC_DIGITS];
     sm3_context sm3_ctx;
 
-//A1:generate random number k;
-    for (i=0; i < NUM_ECC_DIGITS; i++)
+    //A1:generate random number k;
+#ifdef __SM2_TEST__
+    vli_set(&k,p_random);
+#else
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         k[i] = p_random[NUM_ECC_DIGITS - i - 1];
     }
+#endif
 
-//A2:C1=[k]G;
+    //A2:C1=[k]G;
     EccPoint_mult(&C1, &curve_G, k, NULL);
-    for (i=0; i < NUM_ECC_DIGITS/2; i++)
+#ifdef __SM2_TEST__
+#else
+    for (i = 0; i < NUM_ECC_DIGITS / 2; i++)
     {
         tmp = C1.x[i];
         C1.x[i] = C1.x[NUM_ECC_DIGITS - i - 1];
@@ -1341,51 +1360,64 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
         C1.y[i] = C1.y[NUM_ECC_DIGITS - i - 1];
         C1.y[NUM_ECC_DIGITS - i - 1] = tmp;
     }
+#endif
 
-//A3:h=1;S=[h]Pb;
-    for (i=0; i < NUM_ECC_DIGITS; i++)
+    //A3:h=1;S=[h]Pb;
+#ifdef __SM2_TEST__
+    vli_set(&Pb.x, p_publicKey->x);
+    vli_set(&Pb.y, p_publicKey->y);
+
+#else
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         Pb.x[i] = p_publicKey->x[NUM_ECC_DIGITS - i - 1];
         Pb.y[i] = p_publicKey->y[NUM_ECC_DIGITS - i - 1];
     }
-    if(EccPoint_isZero(&Pb))
+#endif
+    if (EccPoint_isZero(&Pb))
     {
         printf("S at infinity...\n");
         return 0;
     }
 
-//A4:[k]Pb = (x2, y2);
+    //A4:[k]Pb = (x2, y2);
     EccPoint_mult(&point2, &Pb, k, NULL);
-    for (i=0; i < NUM_ECC_DIGITS; i++)
+
+#ifdef __SM2_TEST__
+    vli_set(&point2_revert.x, point2.x);
+    vli_set(&point2_revert.y, point2.y);
+#else
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         point2_revert.x[i] = point2.x[NUM_ECC_DIGITS - i - 1];
         point2_revert.y[i] = point2.y[NUM_ECC_DIGITS - i - 1];
     }
+#endif
 
-//A5: t =KDF(x2||y2, klen)
+    //A5: t =KDF(x2||y2, klen)
     memcpy(x2y2, point2_revert.x, NUM_ECC_DIGITS);
     memcpy(x2y2 + NUM_ECC_DIGITS, point2_revert.y, NUM_ECC_DIGITS);
 
     x9_63_kdf_sm3(x2y2, NUM_ECC_DIGITS * 2, C2, plain_len);
-    if(vli_isZero(C2))
+    if (vli_isZero(C2))
     { /* If r == 0, fail (need a different random number). */
         return 0;
     }
 
-//A6: C2 = M^t;
-    for (i = 0; i < plain_len; i++) 
+    //A6: C2 = M^t;
+    for (i = 0; i < plain_len; i++)
     {
         C2[i] ^= plain_text[i];
     }
 
-//A7:C3 = Hash(x2, M, y2);
+    //A7:C3 = Hash(x2, M, y2);
     sm3_starts(&sm3_ctx);
     sm3_update(&sm3_ctx, point2_revert.x, NUM_ECC_DIGITS);
     sm3_update(&sm3_ctx, plain_text, plain_len);
     sm3_update(&sm3_ctx, point2_revert.y, NUM_ECC_DIGITS);
     sm3_finish(&sm3_ctx, C3);
 
-//A8:C=C1||C3||C2
+    //A8:C=C1||C3||C2
     cipher_text[0] = PC;
     *cipher_len = 1;
     memcpy(cipher_text + *cipher_len, C1.x, NUM_ECC_DIGITS * 2);
@@ -1421,12 +1453,18 @@ int sm2_decrypt(uint8_t *plain_text, unsigned int *plain_len, uint8_t *cipher_te
     p_C2 = cipher_text + 97;
     C2_len = cipher_len - 97;
 
+#ifdef __SM2_TEST__
+    vli_set(&C1.x, p_C1->x);
+    vli_set(&C1.y, p_C1->y);
+    vli_set(&p_pvk, p_privateKey);
+#else
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         C1.x[i] = p_C1->x[NUM_ECC_DIGITS - i - 1];
         C1.y[i] = p_C1->y[NUM_ECC_DIGITS - i - 1];
         p_pvk[i] = p_privateKey[NUM_ECC_DIGITS - i - 1];
     }
+#endif
 
     ret = EccPoint_is_on_curve(C1);
     if (1 != ret)
@@ -1435,8 +1473,8 @@ int sm2_decrypt(uint8_t *plain_text, unsigned int *plain_len, uint8_t *cipher_te
         return 0;
     }
 
-//B2:h=1;S=[h]C1;
-    if(EccPoint_isZero(&C1))
+    //B2:h=1;S=[h]C1;
+    if (EccPoint_isZero(&C1))
     {
         printf("S at infinity...\n");
         return 0;
@@ -1444,80 +1482,85 @@ int sm2_decrypt(uint8_t *plain_text, unsigned int *plain_len, uint8_t *cipher_te
 
 #ifdef __SM2_DEBUG__
     printf("p_privateKey:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_pvk[i]);
     }
 
     printf("\ncipher->C1.x:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", C1.x[i]);
     }
 
     printf("\ncipher->C1.y:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", C1.y[i]);
     }
     printf("\n");
 #endif
 
-//B3:[dB]C1 = (x2, y2);
+    //B3:[dB]C1 = (x2, y2);
     EccPoint_mult(&point2, &C1, p_pvk, NULL);
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+#ifdef __SM2_TEST__
+    vli_set(&point2_revrt.x, point2.x);
+    vli_set(&point2_revrt.y, point2.y);
+#else
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         point2_revrt.x[i] = point2.x[NUM_ECC_DIGITS - i - 1];
         point2_revrt.y[i] = point2.y[NUM_ECC_DIGITS - i - 1];
     }
+#endif
 
 #ifdef __SM2_DEBUG__
     printf("point2.x:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", point2.x[i]);
     }
 
     printf("\npoint2.y:");
-    for (i = 0; i<NUM_ECC_DIGITS; i++)
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", point2.y[i]);
     }
 #endif
 
-//B4: t =KDF(x2||y2, klen)
+    //B4: t =KDF(x2||y2, klen)
     memcpy(x2y2, point2_revrt.x, NUM_ECC_DIGITS);
     memcpy(x2y2 + NUM_ECC_DIGITS, point2_revrt.y, NUM_ECC_DIGITS);
 
     *plain_len = C2_len;
     x9_63_kdf_sm3(x2y2, NUM_ECC_DIGITS * 2, plain_text, *plain_len);
-    if(vli_isZero(plain_text))
+    if (vli_isZero(plain_text))
     { /* If r == 0, fail (need a different random number). */
         return 0;
     }
 
 #ifdef __SM2_DEBUG__
     printf("\nkdf out:");
-    for (i = 0; i<*plain_len; i++)
+    for (i = 0; i < *plain_len; i++)
     {
         printf("%02X", plain_text[i]);
     }
 
     printf("\nC2:");
-    for (i = 0; i < C2_len; i++) 
+    for (i = 0; i < C2_len; i++)
     {
         printf("%02X", p_C2[i]);
     }
 #endif
 
-//B5:M' = C2 ^ t;
-    for (i = 0; i < C2_len; i++) 
+    //B5:M' = C2 ^ t;
+    for (i = 0; i < C2_len; i++)
     {
         plain_text[i] ^= p_C2[i];
     }
     plain_text[*plain_len] = '\0';
 
-// B6: check Hash(x2 || M || y2) == C3
+    // B6: check Hash(x2 || M || y2) == C3
     sm3_starts(&sm3_ctx);
     sm3_update(&sm3_ctx, point2_revrt.x, NUM_ECC_DIGITS);
     sm3_update(&sm3_ctx, plain_text, *plain_len);
@@ -1526,20 +1569,20 @@ int sm2_decrypt(uint8_t *plain_text, unsigned int *plain_len, uint8_t *cipher_te
 
 #ifdef __SM2_DEBUG__
     printf("\nmac:");
-    for (i = 0; i < NUM_ECC_DIGITS; i++) 
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", mac[i]);
     }
 
     printf("\ncipher->M:");
-    for (i = 0; i < NUM_ECC_DIGITS; i++) 
+    for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
         printf("%02X", p_C3[i]);
     }
     printf("\n");
 #endif
 
-    if (0 != memcmp(p_C3, mac, NUM_ECC_DIGITS)) 
+    if (0 != memcmp(p_C3, mac, NUM_ECC_DIGITS))
     {
         printf("hash error\n");
         return 0;
@@ -1548,79 +1591,22 @@ int sm2_decrypt(uint8_t *plain_text, unsigned int *plain_len, uint8_t *cipher_te
     return 1;
 }
 
-
-
-
 #endif /* SM2_ECDSA */
 
-void ecc_bytes2native(uint8_t p_native[NUM_ECC_DIGITS], uint8_t p_bytes[NUM_ECC_DIGITS*4])
+void ecc_bytes2native(uint8_t p_native[NUM_ECC_DIGITS], uint8_t p_bytes[NUM_ECC_DIGITS * 4])
 {
     unsigned i;
-    for(i=0; i<NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        p_native[i] = p_bytes[NUM_ECC_DIGITS-i-1];
+        p_native[i] = p_bytes[NUM_ECC_DIGITS - i - 1];
     }
 }
 
-void ecc_native2bytes(uint8_t p_bytes[NUM_ECC_DIGITS*4], uint8_t p_native[NUM_ECC_DIGITS])
+void ecc_native2bytes(uint8_t p_bytes[NUM_ECC_DIGITS * 4], uint8_t p_native[NUM_ECC_DIGITS])
 {
     unsigned i;
-    for(i=0; i<NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        p_bytes[NUM_ECC_DIGITS-i-1] = p_native[i];
+        p_bytes[NUM_ECC_DIGITS - i - 1] = p_native[i];
     }
-}
-
-
-// ���ܷ��͸��豸������
-int Encrpt_SM2(unsigned char*Message_original, int Length_of_Message, unsigned char* Message_encrypted)
-{
-	EccPoint p_publicKey;
-	uint8_t p_privateKey[NUM_ECC_DIGITS];
-	uint8_t p_random[NUM_ECC_DIGITS];
-	unsigned int encdata_len;
-	// ��Կǰ32λ��ע��ͽ��ܵĲ���һ�Թ�Կ
-	uint8_t pukx_str[] = "9b69cf828ae307ab9fa3bcbddc5f04831f0fae6835890befff91401dde6394ca";
-	// ��Կ��32λ
-	uint8_t puky_str[] = "28afe71cd21f8ffc7b3a52adffe90f22a68f8bf810fb2925da168407f4535a15";
-	// �����
-	uint8_t rnd_str[] = "59276E27D506861A16680F3AD9C02DCCEF3CC1FA3CDBE4CE6D54B80DEAC1BC21";
-
-	tohex(pukx_str, p_publicKey.x, NUM_ECC_DIGITS);
-	tohex(puky_str, p_publicKey.y, NUM_ECC_DIGITS);
-
-	tohex(rnd_str, p_random, NUM_ECC_DIGITS);
-
-	int ret = sm2_encrypt(Message_encrypted, &encdata_len, &p_publicKey, p_random, Message_original, Length_of_Message);
-	// ȥ����λ04��
-	for (int i = 0;i < encdata_len;i++)
-	{
-		Message_encrypted[i] = Message_encrypted[i + 1];
-	}
-	return ret;
-}
-// added by junxue.zheng �����豸���͵�����
-int Decrypt_SM2(unsigned char *Message_Encrypted, int Length_of_Message, unsigned char* Message_Decrypted)
-{
-	unsigned char encData_hex[65535];
-	int i = Length_of_Message;
-	// ��λ��04
-	for (i;i >=0;i--) 
-	{
-		Message_Encrypted[i + 2] = Message_Encrypted[i];
-	}
-	Message_Encrypted[0] = '0';
-	Message_Encrypted[1] = '4';
-	tohex(Message_Encrypted, encData_hex, Length_of_Message+2);
-	Length_of_Message = Length_of_Message/2 + 1;
-
-	uint8_t p_privateKey[NUM_ECC_DIGITS];
-	unsigned int p_out_len = 0;
-
-	//����˽Կ
-	uint8_t pvk_str[] = "b66fd44a0597b25ce27b282d9079b637bc060e4cc265640342e6651a014e03ff";
-
-	tohex(pvk_str, p_privateKey, NUM_ECC_DIGITS);
-	int ret = sm2_decrypt(Message_Decrypted, &p_out_len, encData_hex, Length_of_Message, p_privateKey);
-	return ret;
 }

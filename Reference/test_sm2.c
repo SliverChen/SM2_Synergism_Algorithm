@@ -1,25 +1,7 @@
 #include <stdio.h>
+#include<stdlib.h>
 #include "sm2.h"
 
-void tohex(const uint8_t *source, uint8_t *result, int len)
-{
-    uint8_t h1,h2; 
-    uint8_t s1,s2;
-    int i;
-    for (i=0; i<len; i++)
-    {
-        h1 = source[2*i];
-        h2 = source[2*i+1];
-        s1 = toupper(h1) - '0';
-        if (s1 > 9) 
-            s1 = s1 - ('A' - ':');
-        s2 = toupper(h2) - '0';
-        if (s2 > 9) 
-            s2 = s2 - ('A' - ':');
-        
-        result[i] = s1*16 + s2; 
-    }
-}
 
 void test_sm2_verify()
 {
@@ -67,7 +49,58 @@ void test_sm2_verify()
 
     printf("result:%d\n\n", sm2_verify(&sig, msg_buf, msg_len, id_buf, NUM_ECC_DIGITS, &p_publicKey));
 }
+// ���ܷ��͸��豸������
+int Encrpt_SM2(unsigned char* Message_original, int Length_of_Message, unsigned char* Message_encrypted)
+{
+    EccPoint p_publicKey;
+    uint8_t p_privateKey[NUM_ECC_DIGITS];
+    uint8_t p_random[NUM_ECC_DIGITS];
+    unsigned int encdata_len;
+    // ��Կǰ32λ��ע��ͽ��ܵĲ���һ�Թ�Կ
+    uint8_t pukx_str[] = "9b69cf828ae307ab9fa3bcbddc5f04831f0fae6835890befff91401dde6394ca";
+    // ��Կ��32λ
+    uint8_t puky_str[] = "28afe71cd21f8ffc7b3a52adffe90f22a68f8bf810fb2925da168407f4535a15";
+    // �����
+    uint8_t rnd_str[] = "59276E27D506861A16680F3AD9C02DCCEF3CC1FA3CDBE4CE6D54B80DEAC1BC21";
 
+    tohex(pukx_str, p_publicKey.x, NUM_ECC_DIGITS);
+    tohex(puky_str, p_publicKey.y, NUM_ECC_DIGITS);
+
+    tohex(rnd_str, p_random, NUM_ECC_DIGITS);
+
+    int ret = sm2_encrypt(Message_encrypted, &encdata_len, &p_publicKey, p_random, Message_original, Length_of_Message);
+    // ȥ����λ04��
+    for (int i = 0; i < encdata_len; i++)
+    {
+        Message_encrypted[i] = Message_encrypted[i + 1];
+    }
+    return ret;
+}
+// added by junxue.zheng �����豸���͵�����
+int Decrypt_SM2(unsigned char* Message_Encrypted, int Length_of_Message, unsigned char* Message_Decrypted)
+{
+    unsigned char encData_hex[65535];
+    int i = Length_of_Message;
+    // ��λ��04
+    for (i; i >= 0; i--)
+    {
+        Message_Encrypted[i + 2] = Message_Encrypted[i];
+    }
+    Message_Encrypted[0] = '0';
+    Message_Encrypted[1] = '4';
+    tohex(Message_Encrypted, encData_hex, Length_of_Message + 2);
+    Length_of_Message = Length_of_Message / 2 + 1;
+
+    uint8_t p_privateKey[NUM_ECC_DIGITS];
+    unsigned int p_out_len = 0;
+
+    //����˽Կ
+    uint8_t pvk_str[] = "b66fd44a0597b25ce27b282d9079b637bc060e4cc265640342e6651a014e03ff";
+
+    tohex(pvk_str, p_privateKey, NUM_ECC_DIGITS);
+    int ret = sm2_decrypt(Message_Decrypted, &p_out_len, encData_hex, Length_of_Message, p_privateKey);
+    return ret;
+}
 
 //int test_sm2_sign_verify() 
 //{
@@ -195,7 +228,7 @@ void test_sm2_encrypt_decrypt()
     EccPoint p_publicKey;
     uint8_t p_privateKey[NUM_ECC_DIGITS];
     uint8_t p_random[NUM_ECC_DIGITS];
-    uint8_t *plain_text = "encryption standard";
+    uint8_t *plain_text = "Hello my Friend";
     unsigned int plain_len = strlen(plain_text);
 
     uint8_t p_out[NUM_ECC_DIGITS];
