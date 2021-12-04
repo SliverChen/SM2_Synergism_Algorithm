@@ -1,4 +1,4 @@
-#include "ecc_param.h"
+﻿#include "ecc_param.h"
 #include "vli_compute.h"
 
 void tostr(const uint8_t *source, string &result, int len)
@@ -12,9 +12,9 @@ void tostr(const uint8_t *source, string &result, int len)
     {
         //采用格式串的方式获取hex的字符串形式
 #ifdef _WIN32
-        sprintf_s(ch, len * 2, "%02X", source[i]);
+        sprintf_s(ch, len * 2, "%02X", source[i]); //WIN32下编辑器会报不安全的错误
 #else
-        sprintf(ch, "%02X", source[i]);
+        sprintf(ch, "%02X", source[i]); //在Mac和Linux环境下使用这个函数即可
 #endif //_WIN32
 
         //这里说明了用string的原因

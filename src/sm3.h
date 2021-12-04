@@ -1,4 +1,4 @@
-/**
+﻿/**
  * \file sm3.h
  * thanks to Xyssl
  * SM3 standards:http://www.oscca.gov.cn/News/201012/News_1199.htm

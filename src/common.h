@@ -1,4 +1,4 @@
-/*
+﻿/*
 *   公共部分(每个头文件都会包含)
 */
 
@@ -11,8 +11,8 @@
 #else
 #include <time.h>
 #include <unistd.h>
-#endif //_WIN32
 
+#endif //_WIN32
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,12 +31,10 @@
 using std::string;
 
 //规范化调试语句
-typedef struct tm *tm_t;
-static time_t curtime;
-static tm_t timenow;
+static time_t curtime;     //同下
+static struct tm* timenow; //全局变量需要注意声明为static（否则会出现重定义的情况）
 
-//localtime在win环境下是被认为不安全的，需要加上_CRT_SECURE_NO_WARNINGS
-//这里可能存在兼容性的问题
+//在win环境下需要加入_CRT_SECURE_NO_WARNINGS
 #define MES_INFO(...)                                  \
     time(&curtime);                                    \
     timenow = localtime(&curtime);                     \
@@ -58,10 +56,13 @@ static tm_t timenow;
 //SM2的数据长度
 #define NUM_ECC_DIGITS 32
 
-//内存清理
+//内存清理f
+
+//如果指针调用的是一个数组，则需要调用FREEARRAY
 #define FREE(X) \
     delete X;   \
     X = nullptr;
+
 #define FREEARRAY(X) \
     delete[] X;      \
     X = nullptr;

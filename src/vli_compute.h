@@ -1,4 +1,4 @@
-/*
+﻿/*
     the header of variable length integer computing
     (变长整数的运算)
     date: 2021 / 11 / 17
@@ -36,11 +36,15 @@ extern "C"
 #define EVEN(vli) (!(vli[0] & 1))
 
     /*
- *   make the string with type 'uint8_t[] / uint8_t*' into the representation of hex \n
- *   @brief uint8_t str[] = "123123"  convert to  hex: uint8_t val[3] = {0x12, 0x31, 0x23}
- *   @param source the converted string
- *   @param result the representation of hex after converting
- *   @param len the length of the source string
+ *   make the string with type 'uint8_t[] / uint8_t*' into the representation of hex
+
+ *   Instruction:
+ *      uint8_t str[] = "123123"  convert to  hex: uint8_t val[3] = {0x12, 0x31, 0x23}
+ *   
+ *   Input/Output:
+ *      source: the converted string
+ *      result: the representation of hex after converting
+ *      len: the length of the source string
  */
     void tohex(const uint8_t *source, uint8_t *result, int len);
 
@@ -81,7 +85,7 @@ extern "C"
     @param p_src the integer that will be refered
     @param p_dst the integer that will be set
 */
-    void vli_set(uint8_t *p_src, uint8_t *p_dst);
+    void vli_set(uint8_t *p_dest, uint8_t *p_src);
 
     /*
     compare both of values
@@ -164,7 +168,7 @@ extern "C"
     void vli_mmod_fast(uint8_t *p_result, uint8_t *p_product);
 
     /*
-    compute the Inv of the value
+    compute the Inv of the value, 
     it means to calculate p into p^(-1)
     @param p_result the value after calculating
     @param p_input the value that will be calculated

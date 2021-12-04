@@ -1,4 +1,4 @@
-/*
+﻿/*
  * SM3 Hash alogrith 
  * thanks to Xyssl
  * author:goldboar

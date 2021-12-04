@@ -101,6 +101,7 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     uint8_t* randStr = nullptr;
     makeRandom(randStr);
     tohex(randStr, k, NUM_ECC_DIGITS);
+    FREE(randStr);
     
     //这里不需要反转
     //因为参考算法传进来的随机数本身是反序的
@@ -177,6 +178,7 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     }
 
     //A4:[k]Pb = (x2, y2);
+    //用两个正序计算的结果显然是正序的
     EccPoint_mult(&point2, &Pb, k, NULL);
 
     //这里反转是为了后续对C2的计算
@@ -290,12 +292,19 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     //这里只需要对提取出来的C1进行反转
     //私钥不需要变化，因为计算出来的私钥是正序的
     //与参考算法的测试代码不同，传进来之前私钥是反序的
+
+    //但是C1和私钥是否需要反序来参与C2的计算？
+    //尝试一下
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        C1.x[i] = p_C1->x[NUM_ECC_DIGITS - i - 1];
-        C1.y[i] = p_C1->y[NUM_ECC_DIGITS - i - 1];
-        //p_pvk[i] = p_priKey[NUM_ECC_DIGITS - i - 1];
-        p_pvk[i] = p_priKey[i];
+        //C1.x[i] = p_C1->x[NUM_ECC_DIGITS - i - 1];
+        //C1.y[i] = p_C1->y[NUM_ECC_DIGITS - i - 1];
+
+        C1.x[i] = p_C1->x[i];
+        C1.y[i] = p_C1->y[i];
+
+        p_pvk[i] = p_priKey[NUM_ECC_DIGITS - i - 1];
+        //p_pvk[i] = p_priKey[i];  
     }
 
 #ifdef __SM2_TEST_DEBUG__
@@ -381,7 +390,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("kdf out: ");
-    for (i = 0; i < *plain_len; ++i)
+    for (i = 0; i < (int) * plain_len; ++i)
     {
         printf("%02X", plain_text[i]);
     }
@@ -439,127 +448,150 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
 
 void test_sm2_encrypt_decrypt()
 {
-    //1、设置加解密信息
-    const char *plain_text = "Hello my friend";
-    unsigned int plain_len = static_cast<unsigned int>(strlen(plain_text));
+    int i;
+    //1、设置测试的消息字符串
+    const char* plain_text = "my name is Van";
+    unsigned int plain_len = strlen(plain_text);
 
-    MES_INFO("the plain text is: %s\n", plain_text);
+    MES_INFO("the plain text is: %s, which lengt is %d\n", plain_text,plain_len);
 
-    //2、设置公私钥
-    uint8_t *d1_str = NULL;
-    uint8_t *d2_str = NULL;
-    EccPoint p_publicKey;
+
+    //2、计算私钥
+    uint8_t* d1_str = nullptr;
+    uint8_t* d2_str = nullptr;
+    EccPoint p_pubKey;
+    
     makeRandom(d1_str);
     makeRandom(d2_str);
 
-    uint8_t *d1_key = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t *d2_key = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* d1 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* d2 = new uint8_t[NUM_ECC_DIGITS];
+
+    tohex(d1_str, d1, NUM_ECC_DIGITS);
+    tohex(d2_str, d2, NUM_ECC_DIGITS);
+
+    uint8_t one[NUM_ECC_DIGITS] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
+    };
+    uint8_t* d1d2 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* p_priKey = new uint8_t[NUM_ECC_DIGITS];
+    vli_modMult(d1d2, d1, d2, curve_p);
+    vli_modSub(p_priKey, d1d2, one, curve_p);
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("the private key d1 is: %s\n", d1_str);
-    MES_INFO("the private key d2 is: %s\n", d2_str);
+    MES_INFO("the prikey d1 is: ");
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", d1[i]);
+    }
+    printf("\n");
+
+    MES_INFO("the prikey d2 is : ");
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", d2[i]);
+    }
+    printf("\n");
+    
+    MES_INFO("the prikey is: ");
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", p_priKey[i]);
+    }
+    printf("\n");
 #endif //__SM2_TEST_DEBUG__
 
-    tohex(d1_str, d1_key, NUM_ECC_DIGITS);
-    tohex(d2_str, d2_key, NUM_ECC_DIGITS);
-
-    /*************************重点排查区域********************************/
-
-    //P = d1d2G-G
+    //3、计算公钥
+    EccPoint d2G;
     EccPoint d1d2G;
-    EccPoint_mult(&d1d2G, &curve_G, d2_key, NULL);
-    EccPoint_mult(&p_publicKey, &d1d2G, d1_key, NULL);
+    EccPoint_mult(&d2G, &curve_G, d2, NULL);
+    EccPoint_mult(&d1d2G, &d2G, d1, NULL);
 
-    uint8_t *x1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t *y1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t *x2 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t *y2 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* x1 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* y1 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* x2 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* y2 = new uint8_t[NUM_ECC_DIGITS];
 
-    vli_set(d1d2G.x, x1);
-    vli_set(d1d2G.y, y1);
-    vli_set(curve_G.x, x2);
-    vli_set(curve_G.y, y2);
+    vli_set(x1,d1d2G.x);
+    vli_set(y1,d1d2G.y);
+    vli_set(x2,curve_G.x);
+    vli_set(y2,curve_G.y);
 
-    //调用xycz_addc计算d1d2G-G，结果在(x2,y2)
+    //call xycz_addc to calculate d1d2G-G
     XYcZ_addC(x1, y1, x2, y2);
 
-    vli_set(x2, p_publicKey.x);
-    vli_set(y2, p_publicKey.y);
-
-    /*******************************************************************/
-
-    if (!ecc_valid_public_key(&p_publicKey))
-    {
-        MES_ERROR("the public key may be invalid.\n");
-    }
+    vli_set(p_pubKey.x,x1);
+    vli_set(p_pubKey.y,y1);
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the public key.x is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        printf("%02X", p_publicKey.x[i]);
+        printf("%02X", p_pubKey.x[i]);
     }
     printf("\n");
 
     MES_INFO("the public key.y is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        printf("%02X", p_publicKey.y[i]);
+        printf("%02X", p_pubKey.y[i]);
     }
     printf("\n");
-#endif //__SM2_TEST_DEBUG__ \
-       //P = (d1d2-1)G
+#endif //__SM2_TEST_DEBUG__
 
-    uint8_t one[NUM_ECC_DIGITS] = {
-        0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    uint8_t *d1d2 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t *d1d2_1 = new uint8_t[NUM_ECC_DIGITS];
-    vli_modMult(d1d2, d1_key, d2_key, curve_p);
-    vli_modSub(d1d2_1, d1d2, one, curve_p);
+    MES_INFO("check the validation of the public key: ");
+    if (ecc_valid_public_key(&p_pubKey))
+    {
+        printf("good\n");
+    }
+    else
+    {
+        printf("bad, please check the calculation again\n");
+    }
 
-    // EccPoint_mult(&p_publicKey,&curve_G,d1d2_1,NULL);
+    FREEARRAY(x1); FREEARRAY(y1);
+    FREEARRAY(x2); FREEARRAY(y2);
 
-    //3、加密过程
-    MES_INFO("****************encrypting*******************\n");
+    //4、加密过程
+    MES_INFO("*************encrypting************\n");
+    uint8_t* encdata = new uint8_t[1024];
+    uint8_t* plaintext = (uint8_t*)const_cast<char*>(plain_text);
+    unsigned int encdata_len;
 
-    //3.2 加密
-    uint8_t *encdata = new uint8_t[1024]; //密文
-    unsigned int encdata_len;             //密文长度
-    uint8_t *plaintext = (uint8_t *)(plain_text);
-
-    int ret = sm2_encrypt(encdata, &encdata_len, &p_publicKey,
+    int ret = sm2_encrypt(encdata, &encdata_len, &p_pubKey,
         plaintext, plain_len);
 
-    MES_INFO("sm2_encrypt result:%d,result's len: %d\n", ret, encdata_len);
+    MES_INFO("sm2_encrypt result:%d, result's len:%d \n", ret, encdata_len);
 
     MES_INFO("encrypting result: ");
-    for (unsigned int i = 0; i < encdata_len; ++i)
+    for (i = 0; i < encdata_len; ++i)
     {
         printf("%02X", encdata[i]);
         if (1 == (i + 1) % 32)
             printf("\n");
     }
     printf("\n\n");
-
-    //4、解密过程
-    MES_INFO("*****************decrypting*****************\n");
-    uint8_t *p_out = new uint8_t[NUM_ECC_DIGITS];
+   
+    //5、解密过程
+    MES_INFO("*********************decrypting***************\n");
+    uint8_t* p_out = new uint8_t[1024];
     unsigned int p_out_len = 0;
     ret = sm2_decrypt_self(
         p_out, &p_out_len,
         encdata, encdata_len,
-        d1d2_1 //这里感觉不是传这个值(需要明确:在协同计算中私钥是什么)
+        p_priKey
     );
 
     MES_INFO("sm2_decrypt result: %d\n", ret);
-    MES_INFO("plaintest is :%s\n", p_out);
+    MES_INFO("plain text is : %s\n", p_out);
 }
 
 int main()
 {
     test_sm2_encrypt_decrypt();
+
     return 0;
 }
