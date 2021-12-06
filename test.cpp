@@ -93,7 +93,7 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     EccPoint point2_revert;
 
     uint8_t *x2y2 = new uint8_t[NUM_ECC_DIGITS * 2];
-    uint8_t *C2 = new uint8_t[65535];
+    uint8_t *C2 = new uint8_t[1024];
     uint8_t *C3 = new uint8_t[NUM_ECC_DIGITS];
     sm3_context sm3_ctx;
 
@@ -101,8 +101,10 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     uint8_t* randStr = nullptr;
     makeRandom(randStr);
     tohex(randStr, k, NUM_ECC_DIGITS);
-    FREE(randStr);
-    
+    //FREE(randStr);  
+    //error 提前释放randStr的内存会报crtlsvalidheappointer(block)的错误
+    //出现这个错误的原因主要在堆内存的指针释放的问题
+
     //这里不需要反转
     //因为参考算法传进来的随机数本身是反序的
     //我们这里生成的随机数是正序的
@@ -297,14 +299,11 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     //尝试一下
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        //C1.x[i] = p_C1->x[NUM_ECC_DIGITS - i - 1];
-        //C1.y[i] = p_C1->y[NUM_ECC_DIGITS - i - 1];
+        C1.x[i] = p_C1->x[NUM_ECC_DIGITS - i - 1];
+        C1.y[i] = p_C1->y[NUM_ECC_DIGITS - i - 1];
 
-        C1.x[i] = p_C1->x[i];
-        C1.y[i] = p_C1->y[i];
-
-        p_pvk[i] = p_priKey[NUM_ECC_DIGITS - i - 1];
-        //p_pvk[i] = p_priKey[i];  
+        //p_pvk[i] = p_priKey[NUM_ECC_DIGITS - i - 1];
+        p_pvk[i] = p_priKey[i];  
     }
 
 #ifdef __SM2_TEST_DEBUG__
@@ -351,6 +350,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     //这里为什么要反转*******************************************这里有问题
     //本身放在密文的C2在计算的时候就是反序的
     //如果提取出来再反转就变成了A4计算步骤的值
+    //A4的值是不参与计算的，这一点需要注意
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         //point2_revrt.x[i] = point2.x[NUM_ECC_DIGITS - i - 1];
@@ -419,14 +419,14 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     sm3_finish(&sm3_ctx, mac);
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("mac: ");
+    MES_INFO("Hash value: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", mac[i]);
     }
     printf("\n");
 
-    MES_INFO("cipher->M: ");
+    MES_INFO("cipher->M:  ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", p_C3[i]);
@@ -449,6 +449,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
 void test_sm2_encrypt_decrypt()
 {
     int i;
+
     //1、设置测试的消息字符串
     const char* plain_text = "my name is Van";
     unsigned int plain_len = strlen(plain_text);
@@ -456,10 +457,11 @@ void test_sm2_encrypt_decrypt()
     MES_INFO("the plain text is: %s, which lengt is %d\n", plain_text,plain_len);
 
 
-    //2、计算私钥
+    //2、生成私钥（这里的计算可能有些问题: d1d2-1）
+    
     uint8_t* d1_str = nullptr;
     uint8_t* d2_str = nullptr;
-    EccPoint p_pubKey;
+    EccPoint p_pubKey{};
     
     makeRandom(d1_str);
     makeRandom(d2_str);
@@ -504,7 +506,7 @@ void test_sm2_encrypt_decrypt()
     printf("\n");
 #endif //__SM2_TEST_DEBUG__
 
-    //3、计算公钥
+    //3、计算公钥（这里的计算没有问题: d1d2G - G）
     EccPoint d2G;
     EccPoint d1d2G;
     EccPoint_mult(&d2G, &curve_G, d2, NULL);
@@ -521,6 +523,7 @@ void test_sm2_encrypt_decrypt()
     vli_set(y2,curve_G.y);
 
     //call xycz_addc to calculate d1d2G-G
+    //the result is in the (x1,y1)
     XYcZ_addC(x1, y1, x2, y2);
 
     vli_set(p_pubKey.x,x1);
@@ -555,7 +558,47 @@ void test_sm2_encrypt_decrypt()
     FREEARRAY(x1); FREEARRAY(y1);
     FREEARRAY(x2); FREEARRAY(y2);
 
+
+    //这里需要检验公钥和私钥的有效性
+    //检验：(d1d2-1)G 是否等于 d1d2G - G
+    //在正常情况下，公钥pub和私钥pri之间的关系为：pub = [pri]G
+    //二者通过一个椭圆曲线的点进行关联
+    //私钥在当前算法的形式为 d1d2-1
+    //公钥在当前算法的形式为 (d1d2-1)G
+
+    EccPoint d1d2_1G;
+    EccPoint_mult(&d1d2_1G, &curve_G, p_priKey, NULL);
+
+#ifdef __SM2_TEST_DEBUG__
+    MES_INFO("d1d2_1G.x is: ");
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", d1d2_1G.x[i]);
+    }
+    printf("\n");
+
+    MES_INFO("d1d2_1G.y is: ");
+    for (i = 0; i < NUM_ECC_DIGITS; ++i)
+    {
+        printf("%02X", d1d2_1G.y[i]);
+    }
+    printf("\n");
+
+#endif //__SM2_TEST_DEBUG__
+
+
+    if (vli_cmp(d1d2_1G.x, p_pubKey.x) == 0 && vli_cmp(d1d2_1G.y, p_pubKey.y) == 0)
+    {
+        MES_INFO("d1d2_1G equals public key, which it is valid.\n");
+    }
+    else
+    {
+        MES_ERROR("d1d2_1G not equals public key, which it is invalid.\n");
+    }
+
+
     //4、加密过程
+    printf("\n");
     MES_INFO("*************encrypting************\n");
     uint8_t* encdata = new uint8_t[1024];
     uint8_t* plaintext = (uint8_t*)const_cast<char*>(plain_text);
