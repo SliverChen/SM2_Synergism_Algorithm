@@ -3,60 +3,40 @@
 void makeRandom(uint8_t *&randStr)
 {
     BIGNUM *bn = BN_new();
-    BIGNUM *cn = BN_new();
-
-    uint8_t *curve_n_revrt = new uint8_t[NUM_ECC_DIGITS];
-
-    //为什么翻转？
-    //如果翻转那么就前十几位都是0xFF，基本上大部分的随机数都能满足这个条件
-    //所以不需要翻转
-
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        // curve_n_revrt[i] = curve_n[NUM_ECC_DIGITS - i - 1];
-        curve_n_revrt[i] = curve_n[i];
-    }
+    int bits = 8 * NUM_ECC_DIGITS;
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("before reverting, the curve N is: ");
+    MES_INFO("the mod of the curve is: ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
-        printf("%02X", curve_n[i]);
-    }
-    printf("\n");
-
-    MES_INFO("after reverting, the curve N is: ");
-    for (int i = 0, i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", curve_n_revrt[i]);
+        printf("%02X", curve_p[i]);
     }
     printf("\n");
 #endif //__SM2_TEST_DEBUG__
 
-    string curveN_Str;
-    tostr(curve_n_revrt, curveN_Str, NUM_ECC_DIGITS);
+    uint8_t* rand_str = new uint8_t[NUM_ECC_DIGITS];
 
-    BN_hex2bn(&cn, curveN_Str.c_str());
-
-    do
+    while (true)
     {
-        if (!BN_rand_range(bn, cn))
+        if (!BN_rand(bn, bits, BN_RAND_TOP_ANY, BN_RAND_BOTTOM_ANY))
         {
             MES_ERROR("can't generate random number\n");
             return;
         }
-    } while (BN_is_zero(bn));
-
-    randStr = (uint8_t *)BN_bn2hex(bn);
+        randStr = (uint8_t*)BN_bn2hex(bn);
+        tohex(randStr, rand_str, NUM_ECC_DIGITS);
+        if (vli_cmp(curve_n, rand_str) == 1 && !vli_isZero(rand_str))
+        {
+            break;
+        }
+    }
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the random string is: %s\n", randStr);
 #endif //__SM2_TEST_DEBUG__
 
     BN_free(bn);
-    BN_free(cn);
-    FREEARRAY(curve_n_revrt);
-    curveN_Str.clear();
+    FREEARRAY(rand_str);
 }
 
 #ifdef __cplusplus

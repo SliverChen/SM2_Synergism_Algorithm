@@ -1,4 +1,4 @@
-/*
+﻿/*
     经过测试，加密的时候出现了一些问题导致后续解密的时候报错: 点不在椭圆曲线上
     思考：
         1、加密的过程使用了公钥加密，公钥的形式是什么(d1d2G-G)
@@ -122,14 +122,14 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     EccPoint_mult(&C1, &curve_G, k, NULL);
 
 #ifdef __SM2_TEST_DEBUG__
-    MES_INFO("C1.x is(before revert): ");
+    MES_INFO("C1.x is: ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.x[i]);
     }
     printf("\n");
 
-    MES_INFO("C1.y is(before revert): ");
+    MES_INFO("C1.y is: ");
     for (int i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.y[i]);
@@ -138,11 +138,11 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
 
     if (EccPoint_is_on_curve(C1))
     {
-        MES_INFO("before exchange,the C1 is on the curve\n");
+        MES_INFO("C1 is on the curve\n");
     }
     else
     {
-        MES_ERROR("before exchange,the C1 is not on the curve\n");
+        MES_ERROR("C1 is not on the curve\n");
     }
 
 #endif // __SM2_TEST_DEBUG__
@@ -167,9 +167,6 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     //因为参考算法的测试代码传进来的公钥本身是反序的
     for (i = 0; i < NUM_ECC_DIGITS; i++)
     {
-        //Pb.x[i] = p_publicKey->x[NUM_ECC_DIGITS - i - 1];
-        //Pb.y[i] = p_publicKey->y[NUM_ECC_DIGITS - i - 1];
-
         Pb.x[i] = p_publicKey->x[i];
         Pb.y[i] = p_publicKey->y[i];
     }
@@ -219,14 +216,14 @@ int sm2_encrypt(uint8_t *cipher_text, unsigned int *cipher_len, EccPoint *p_publ
     C2[plain_len] = '\0';
 
     //A6: C2 = M^t;
-    for (i = 0; i < plain_len; i++)
+    for (i = 0; i < (int)plain_len; i++)
     {
         C2[i] ^= plain_text[i];
     }
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("C2 is: ");
-    for (int i = 0; i < plain_len; ++i)
+    for (int i = 0; i < (int)plain_len; ++i)
     {
         printf("%02X", C2[i]);
     }
@@ -314,13 +311,13 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     }
     printf("\n");
 
-    MES_INFO("C1.x is(after revert): ");
+    MES_INFO("extracting C1.x is: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.x[i]);
     }
     printf("\n");
-    MES_INFO("C1.y is(after revert): ");
+    MES_INFO("extracting C1.y is: ");
     for (i = 0; i < NUM_ECC_DIGITS; ++i)
     {
         printf("%02X", C1.y[i]);
@@ -332,9 +329,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     if (1 != ret)
     {
         MES_ERROR("C1 is not on curve\n");
-
-        /*******************test*************************/
-        //return 0;
+        return 0;
     }
 
     //B2:h=1;S=[h]C1
@@ -446,32 +441,11 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     return 1;
 }
 
-void test_sm2_encrypt_decrypt()
+
+void priKey_Generate(uint8_t*& d1,uint8_t*& d2,uint8_t*& p_priKey)
 {
-    int i;
-
-    //1、设置测试的消息字符串
-    const char* plain_text = "my name is Van";
-    unsigned int plain_len = strlen(plain_text);
-
-    MES_INFO("the plain text is: %s, which lengt is %d\n", plain_text,plain_len);
-
-
-    //2、生成私钥（这里的计算可能有些问题: d1d2-1）
-    
     uint8_t* d1_str = nullptr;
     uint8_t* d2_str = nullptr;
-    EccPoint p_pubKey{};
-    
-    makeRandom(d1_str);
-    makeRandom(d2_str);
-
-    uint8_t* d1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* d2 = new uint8_t[NUM_ECC_DIGITS];
-
-    tohex(d1_str, d1, NUM_ECC_DIGITS);
-    tohex(d2_str, d2, NUM_ECC_DIGITS);
-
     uint8_t one[NUM_ECC_DIGITS] = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -479,9 +453,73 @@ void test_sm2_encrypt_decrypt()
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
     };
     uint8_t* d1d2 = new uint8_t[NUM_ECC_DIGITS];
+    while (true)
+    {
+        makeRandom(d1_str);
+        makeRandom(d2_str);
+
+        tohex(d1_str, d1, NUM_ECC_DIGITS);
+        tohex(d2_str, d2, NUM_ECC_DIGITS);
+
+        vli_modMult_fast(d1d2, d1, d2);
+        vli_modSub(p_priKey, d1d2, one, curve_p);
+
+        while (vli_cmp(curve_n, p_priKey) != 1)
+        {
+            vli_sub(p_priKey, p_priKey, curve_n);
+        }
+        if (!vli_isZero(p_priKey))
+        {
+            break;
+        }
+    }
+}
+
+
+void pubKey_Generate(EccPoint* p_pubKey, uint8_t*& d1, uint8_t*& d2)
+{
+    EccPoint d2G;
+    EccPoint d1d2G;
+    EccPoint_mult(&d2G, &curve_G, d2, NULL);
+    EccPoint_mult(&d1d2G, &d2G, d1, NULL);
+
+    uint8_t* x1 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* y1 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* x2 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* y2 = new uint8_t[NUM_ECC_DIGITS];
+
+    vli_set(x1, d1d2G.x);
+    vli_set(y1, d1d2G.y);
+    vli_set(x2, curve_G.x);
+    vli_set(y2, curve_G.y);
+
+    //call xycz_addc to calculate d1d2G-G
+    //the result is in the (x1,y1)
+    XYcZ_addC(x1, y1, x2, y2);
+
+    vli_set(p_pubKey->x, x1);
+    vli_set(p_pubKey->y, y1);
+
+    FREEARRAY(x1); FREEARRAY(y1);
+    FREEARRAY(x2); FREEARRAY(y2);
+}
+
+void test_sm2_encrypt_decrypt()
+{
+    int i;
+
+    //1、设置测试的消息字符串
+    const char* plain_text = "my name is Van";
+    unsigned int plain_len = (unsigned int)strlen(plain_text);
+
+    MES_INFO("the plain text is: %s, which lengt is %d\n", plain_text,plain_len);
+
+
+    //2、生成私钥（这里的计算可能有些问题: d1d2-1,最后的结果需要保证在[1,n-1]的范围内)
+    uint8_t* d1 = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t* d2 = new uint8_t[NUM_ECC_DIGITS];
     uint8_t* p_priKey = new uint8_t[NUM_ECC_DIGITS];
-    vli_modMult(d1d2, d1, d2, curve_p);
-    vli_modSub(p_priKey, d1d2, one, curve_p);
+    priKey_Generate(d1, d2, p_priKey);
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the prikey d1 is: ");
@@ -506,28 +544,10 @@ void test_sm2_encrypt_decrypt()
     printf("\n");
 #endif //__SM2_TEST_DEBUG__
 
-    //3、计算公钥（这里的计算没有问题: d1d2G - G）
-    EccPoint d2G;
-    EccPoint d1d2G;
-    EccPoint_mult(&d2G, &curve_G, d2, NULL);
-    EccPoint_mult(&d1d2G, &d2G, d1, NULL);
-
-    uint8_t* x1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* y1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* x2 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* y2 = new uint8_t[NUM_ECC_DIGITS];
-
-    vli_set(x1,d1d2G.x);
-    vli_set(y1,d1d2G.y);
-    vli_set(x2,curve_G.x);
-    vli_set(y2,curve_G.y);
-
-    //call xycz_addc to calculate d1d2G-G
-    //the result is in the (x1,y1)
-    XYcZ_addC(x1, y1, x2, y2);
-
-    vli_set(p_pubKey.x,x1);
-    vli_set(p_pubKey.y,y1);
+    //3、计算公钥
+    EccPoint p_pubKey;
+    pubKey_Generate(&p_pubKey, d1, d2);
+    
 
 #ifdef __SM2_TEST_DEBUG__
     MES_INFO("the public key.x is: ");
@@ -554,9 +574,6 @@ void test_sm2_encrypt_decrypt()
     {
         printf("bad, please check the calculation again\n");
     }
-
-    FREEARRAY(x1); FREEARRAY(y1);
-    FREEARRAY(x2); FREEARRAY(y2);
 
 
     //这里需要检验公钥和私钥的有效性
