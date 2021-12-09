@@ -5,16 +5,7 @@ void makeRandom(uint8_t *&randStr)
     BIGNUM *bn = BN_new();
     int bits = 8 * NUM_ECC_DIGITS;
 
-#ifdef __SM2_TEST_DEBUG__
-    MES_INFO("the mod of the curve is: ");
-    for (int i = 0; i < NUM_ECC_DIGITS; ++i)
-    {
-        printf("%02X", curve_p[i]);
-    }
-    printf("\n");
-#endif //__SM2_TEST_DEBUG__
-
-    uint8_t* rand_str = new uint8_t[NUM_ECC_DIGITS];
+    uint8_t *rand_str = new uint8_t[NUM_ECC_DIGITS];
 
     while (true)
     {
@@ -23,7 +14,7 @@ void makeRandom(uint8_t *&randStr)
             MES_ERROR("can't generate random number\n");
             return;
         }
-        randStr = (uint8_t*)BN_bn2hex(bn);
+        randStr = (uint8_t *)BN_bn2hex(bn);
         tohex(randStr, rand_str, NUM_ECC_DIGITS);
         if (vli_cmp(curve_n, rand_str) == 1 && !vli_isZero(rand_str))
         {
@@ -309,30 +300,31 @@ extern "C"
 
     int ecc_valid_public_key(EccPoint *p_publicKey)
     {
-        uint8_t na[NUM_ECC_DIGITS] = {3}; /* a mod p = (-3) mod p */
-
         uint8_t l_tmp1[NUM_ECC_DIGITS];
         uint8_t l_tmp2[NUM_ECC_DIGITS];
 
         if (EccPoint_isZero(p_publicKey))
         {
+            MES_ERROR("public key equals zero.\n");
             return 0;
         }
 
         if (vli_cmp(curve_p, p_publicKey->x) != 1 || vli_cmp(curve_p, p_publicKey->y) != 1)
         {
+            MES_ERROR("the x and y of public key are not all in mod p\n");
             return 0;
         }
 
         vli_modSquare_fast(l_tmp1, p_publicKey->y);       /* tmp1 = y^2 */
         vli_modSquare_fast(l_tmp2, p_publicKey->x);       /* tmp2 = x^2 */
-        vli_modSub(l_tmp2, l_tmp2, na, curve_p);          /* tmp2 = x^2 + a = x^2 - 3 */
+        vli_modSub(l_tmp2, l_tmp2, curve_a, curve_p);     /* tmp2 = x^2 + a = x^2 - 3 */
         vli_modMult_fast(l_tmp2, l_tmp2, p_publicKey->x); /* tmp2 = x^3 + ax */
         vli_modAdd(l_tmp2, l_tmp2, curve_b, curve_p);     /* tmp2 = x^3 + ax + b */
 
         /* Make sure that y^2 == x^3 + ax + b */
         if (vli_cmp(l_tmp1, l_tmp2) != 0)
         {
+            MES_ERROR("the public key is not on the curve\n");
             return 0;
         }
 

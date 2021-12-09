@@ -340,6 +340,7 @@ int sm2_decrypt_self(uint8_t *plain_text, unsigned int *plain_len,
     }
 
     //B3:[dB]C1 = (x2,y2)
+    //这里的计算后续加入协同计算之后需要详细设计
     EccPoint_mult(&point2, &C1, p_pvk, NULL);
 
     //这里为什么要反转*******************************************这里有问题
@@ -464,10 +465,13 @@ void priKey_Generate(uint8_t*& d1,uint8_t*& d2,uint8_t*& p_priKey)
         vli_modMult_fast(d1d2, d1, d2);
         vli_modSub(p_priKey, d1d2, one, curve_p);
 
-        while (vli_cmp(curve_n, p_priKey) != 1)
+        //生成的私钥需要保证[1,n-1]内
+        //在ecc_make_key()中提到：给定的n是足够大的，我们最多只需减去一次n即可
+        if (vli_cmp(curve_n, p_priKey) != 1)
         {
             vli_sub(p_priKey, p_priKey, curve_n);
         }
+
         if (!vli_isZero(p_priKey))
         {
             break;
@@ -475,7 +479,14 @@ void priKey_Generate(uint8_t*& d1,uint8_t*& d2,uint8_t*& p_priKey)
     }
 }
 
-
+//公钥生成有点问题
+//主要体现在生成的公钥不在曲线上
+//但是利用私钥d1d2_1 * G计算得到的公钥是在曲线上的
+//因此推断是d1d2G-G这一步骤的计算有点问题
+//需要自定义一个专门的EccPoint的减法运算
+//或者使用xycz_add()
+//对于P(x1,y1), Q(x2,y2)，因为P-Q可以表示为P+(-Q) = (x1,y1) + (x2,p-y2)
+//其中p-y2是y2在模p下的逆元
 void pubKey_Generate(EccPoint* p_pubKey, uint8_t*& d1, uint8_t*& d2)
 {
     EccPoint d2G;
@@ -483,25 +494,36 @@ void pubKey_Generate(EccPoint* p_pubKey, uint8_t*& d1, uint8_t*& d2)
     EccPoint_mult(&d2G, &curve_G, d2, NULL);
     EccPoint_mult(&d1d2G, &d2G, d1, NULL);
 
-    uint8_t* x1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* y1 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* x2 = new uint8_t[NUM_ECC_DIGITS];
-    uint8_t* y2 = new uint8_t[NUM_ECC_DIGITS];
+    if (EccPoint_is_on_curve(d1d2G))
+    {
+        MES_INFO("d1d2G is on the curve\n");
+    }
+    else
+    {
+        MES_ERROR("d1d2G is not on the curve\n");
+    }
+    EccPoint Q;
+    vli_set(Q.x, curve_G.x);
+    vli_set(Q.y, curve_G.y);
 
-    vli_set(x1, d1d2G.x);
-    vli_set(y1, d1d2G.y);
-    vli_set(x2, curve_G.x);
-    vli_set(y2, curve_G.y);
+    //计算y2 = p-y2
+    vli_modSub(Q.y, curve_p, Q.y, curve_p);
 
-    //call xycz_addc to calculate d1d2G-G
-    //the result is in the (x1,y1)
-    XYcZ_addC(x1, y1, x2, y2);
+    //计算d1d2G+(-G)
+    XYcZ_add(d1d2G.x, d1d2G.y, Q.x, Q.y);
 
-    vli_set(p_pubKey->x, x1);
-    vli_set(p_pubKey->y, y1);
+    vli_set(p_pubKey->x, Q.x);
+    vli_set(p_pubKey->y, Q.y);
 
-    FREEARRAY(x1); FREEARRAY(y1);
-    FREEARRAY(x2); FREEARRAY(y2);
+    if (ecc_valid_public_key(p_pubKey))
+    {
+        MES_INFO("the public key is valid.\n");
+    }
+    else
+    {
+        MES_ERROR("the public key is invalid, please check the calculation.\n");
+    }
+
 }
 
 void test_sm2_encrypt_decrypt()
@@ -544,7 +566,7 @@ void test_sm2_encrypt_decrypt()
     printf("\n");
 #endif //__SM2_TEST_DEBUG__
 
-    //3、计算公钥
+    //3、计算公钥(生成的公钥需要保证在曲线上）
     EccPoint p_pubKey;
     pubKey_Generate(&p_pubKey, d1, d2);
     
@@ -565,15 +587,6 @@ void test_sm2_encrypt_decrypt()
     printf("\n");
 #endif //__SM2_TEST_DEBUG__
 
-    MES_INFO("check the validation of the public key: ");
-    if (ecc_valid_public_key(&p_pubKey))
-    {
-        printf("good\n");
-    }
-    else
-    {
-        printf("bad, please check the calculation again\n");
-    }
 
 
     //这里需要检验公钥和私钥的有效性
@@ -652,6 +665,7 @@ void test_sm2_encrypt_decrypt()
 int main()
 {
     test_sm2_encrypt_decrypt();
+
 
     return 0;
 }
